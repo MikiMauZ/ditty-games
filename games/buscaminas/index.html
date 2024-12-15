@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ditty Buscaminas</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      text-align: center;
+      padding: 20px;
+    }
+    .game-title {
+      color: #4a90e2;
+      font-size: 2em;
+      margin-bottom: 10px;
+    }
+    .game-info {
+      color: #666;
+      font-size: 1.2em;
+      margin-bottom: 20px;
+    }
+    .board {
+      display: inline-grid;
+      grid-template-columns: repeat(var(--size), 30px);
+      grid-template-rows: repeat(var(--size), 30px);
+      gap: 4px;
+      background-color: white;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+    .board > * {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      border: 2px solid #ccc;
+      background-color: #eee;
+      user-select: none;
+    }
+    .board > [data-status="hidden"] {
+      background-color: #bbb;
+      cursor: pointer;
+    }
+    .board > [data-status="mine"] {
+      background-color: red;
+    }
+    .board > [data-status="number"] {
+      background-color: white;
+      color: black;
+    }
+    .board > [data-status="marked"] {
+      background-color: yellow;
+    }
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      background: #4a90e2;
+      color: white;
+      font-size: 1em;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #357abd;
+    }
+    .back-button {
+      background: #666;
+    }
+    .back-button:hover {
+      background: #444;
+    }
+    @media (max-width: 480px) {
+      body {
+        padding: 10px;
+      }
+      .board {
+        padding: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1 class="game-title">Ditty Buscaminas</h1>
+  <div class="game-info">
+    <span id="mines-count">Minas: 0</span>
+    <span id="timer">Tiempo: 0</span>
+  </div>
+  <div class="board"></div>
+  <div class="controls">
+    <button id="easy-btn">Fácil</button>
+    <button id="medium-btn">Medio</button>
+    <button id="hard-btn">Difícil</button>
+    <button id="restart-btn">Reiniciar Juego</button>
+    <button class="back-button" onclick="location.href='../../index.html'">Volver al Menú</button>
+  </div>
+  <script>
+    const LEVELS = {
+      easy: { rows: 8, cols: 8, mines: 10 },
+      medium: { rows: 12, cols: 12, mines: 20 },
+      hard: { rows: 16, cols: 16, mines: 40 },
+    };
+    const TILE_STATUSES = {
+      HIDDEN: "hidden",
+      MINE: "mine",
+      NUMBER: "number",
+      MARKED: "marked",
+    };
+    const board = document.querySelector(".board");
+    const minesCountEl = document.querySelector("#mines-count");
+    const timerEl = document.querySelector("#timer");
+    const easyBtn = document.querySelector("#easy-btn");
+    const mediumBtn = document.querySelector("#medium-btn");
+    const hardBtn = document.querySelector("#hard-btn");
+    const restartBtn = document.querySelector("#restart-btn");
+    let tiles;
+    let minePositions;
+    let mineCount;
+    let gameOver = false;
+    let startTime;
+    let timerInterval;
+    let BOARD_SIZE = LEVELS.easy;
+
+    easyBtn.addEventListener("click", () => {
+      BOARD_SIZE = LEVELS.easy;
+      setupGame();
+    });
+
+    mediumBtn.addEventListener("click", () => {
+      BOARD_SIZE = LEVELS.medium;
+      setupGame();
+    });
+
+    hardBtn.addEventListener("click", () => {
+      BOARD_SIZE = LEVELS.hard;
+      setupGame();
+    });
+
+    restartBtn.addEventListener("click", setupGame);
+
+    function setupGame() {
+      clearInterval(timerInterval);
+      board.innerHTML = "";
+      gameOver = false;
+      mineCount = BOARD_SIZE.mines;
+      minesCountEl.textContent = `Minas: ${mineCount}`;
+      timerEl.textContent = "Tiempo: 0";
+      startTime = Date.now();
+      timerInterval = setInterval(updateTimer, 1000);
+      board.style.setProperty("--size", BOARD_SIZE.cols);
+      tiles = createBoard(BOARD_SIZE.rows * BOARD_SIZE.cols);
+      minePositions = getMinePositions(BOARD_SIZE.rows * BOARD_SIZE.cols, BOARD_SIZE.mines);
+      board.append(...tiles);
+    }
+
+    function createBoard(size) {
+      const tiles = [];
+      for (let i = 0; i < size; i++) {
+        const tile = document.createElement("div");
+        tile.dataset.status = TILE_STATUSES.HIDDEN;
+        tile.addEventListener("click", () => revealTile(tile));
+        tile.addEventListener("contextmenu", (e) => {
+          e.preventDefault();
+          markTile(tile);
+        });
+        tiles.push(tile);
+      }
+      return tiles;
+    }
+
+    function getMinePositions(size, mines) {
+      const positions = [];
+      while (positions.length < mines) {
+        const pos = Math.floor(Math.random() * size);
+        if (!positions.includes(pos)) positions.push(pos);
+      }
+      return positions;
+    }
+
+    function revealTile(tile) {
+      if (gameOver || tile.dataset.status !== TILE_STATUSES.HIDDEN) return;
+      const index = tiles.indexOf(tile);
+      if (minePositions.includes(index)) {
+        tile.dataset.status = TILE_STATUSES.MINE;
+        endGame(false);
+      } else {
+        tile.dataset.status = TILE_STATUSES.NUMBER;
+        const adjMines = getAdjacentMines(tile);
+        tile.textContent = adjMines || "";
+        if (!adjMines) getAdjacentTiles(tile).forEach(revealTile);
+        checkGameEnd();
+      }
+    }
+
+    function markTile(tile) {
+      if (gameOver || tile.dataset.status === TILE_STATUSES.NUMBER) return;
+      if (tile.dataset.status === TILE_STATUSES.MARKED) {
+        tile.dataset.status = TILE_STATUSES.HIDDEN;
+        tile.textContent = "";
+        mineCount++;
+      } else {
+        tile.dataset.status = TILE_STATUSES.MARKED;
+        tile.textContent = "🚩";
+        mineCount--;
+      }
+      minesCountEl.textContent = `Minas: ${mineCount}`;
+    }
+
+    function getAdjacentTiles(tile) {
+      const index = tiles.indexOf(tile);
+      const row = Math.floor(index / BOARD_SIZE.cols);
+      const col = index % BOARD_SIZE.cols;
+      const offsets = [
+        [row - 1, col - 1], [row - 1, col], [row - 1, col + 1],
+        [row, col - 1], [row, col + 1],
+        [row + 1, col - 1], [row + 1, col], [row + 1, col + 1],
+      ];
+      return offsets
+        .filter(([r, c]) => r >= 0 && r < BOARD_SIZE.rows && c >= 0 && c < BOARD_SIZE.cols)
+        .map(([r, c]) => tiles[r * BOARD_SIZE.cols + c]);
+    }
+
+    function getAdjacentMines(tile) {
+      return getAdjacentTiles(tile).filter((t) => minePositions.includes(tiles.indexOf(t))).length;
+    }
+
+    function checkGameEnd() {
+      const win = tiles.every((tile) => {
+        const index = tiles.indexOf(tile);
+        return (
+          (tile.dataset.status === TILE_STATUSES.MARKED && minePositions.includes(index)) ||
+          (!minePositions.includes(index) && tile.dataset.status === TILE_STATUSES.NUMBER)
+        );
+      });
+      if (win) endGame(true);
+    }
+
+    function revealMines() {
+      minePositions.forEach((index) => {
+        tiles[index].dataset.status = TILE_STATUSES.MINE;
+      });
+    }
+
+    function endGame(won) {
+      gameOver = true;
+      clearInterval(timerInterval);
+      if (!won) revealMines();
+      setTimeout(() => {
+        alert(won ? "¡Ganaste!" : "¡Perdiste!");
+      }, 100);
+    }
+
+    function updateTimer() {
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      timerEl.textContent = `Tiempo: ${elapsed}`;
+    }
+
+    setupGame();
+  </script>
+</body>
+</html>

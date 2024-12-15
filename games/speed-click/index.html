@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ditty Speed Click</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      text-align: center;
+      padding: 20px;
+    }
+    .game-title {
+      color: #4a90e2;
+      font-size: 2em;
+      margin-bottom: 10px;
+    }
+    .game-info {
+      color: #666;
+      font-size: 1.2em;
+      margin-bottom: 20px;
+    }
+    .game-area {
+      position: relative;
+      width: 300px;
+      height: 300px;
+      margin: 0 auto 20px;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+    .target {
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      background: #4a90e2;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      font-weight: bold;
+    }
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      background: #4a90e2;
+      color: white;
+      font-size: 1em;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #357abd;
+    }
+    .back-button {
+      background: #666;
+    }
+    .back-button:hover {
+      background: #444;
+    }
+  </style>
+</head>
+<body>
+  <h1 class="game-title">Ditty Speed Click</h1>
+  <div class="game-info">
+    <span id="score">Puntos: 0</span>
+    <span id="time">Tiempo: 30s</span>
+  </div>
+  <div class="game-area" id="game-area"></div>
+  <div class="controls">
+    <button id="start-btn">Iniciar Juego</button>
+    <button class="back-button" onclick="location.href='../../index.html'">Volver al Menú</button>
+  </div>
+  <script>
+    const gameArea = document.getElementById("game-area");
+    const scoreEl = document.getElementById("score");
+    const timeEl = document.getElementById("time");
+    const startBtn = document.getElementById("start-btn");
+
+    let score = 0;
+    let timeLeft = 30;
+    let gameInterval;
+    let targetTimeout;
+    let activeTarget = null;
+
+    startBtn.addEventListener("click", startGame);
+
+    function startGame() {
+      resetGame();
+      startBtn.disabled = true;
+      gameInterval = setInterval(updateTimer, 1000);
+      spawnTarget();
+    }
+
+    function resetGame() {
+      score = 0;
+      timeLeft = 30;
+      scoreEl.textContent = `Puntos: ${score}`;
+      timeEl.textContent = `Tiempo: ${timeLeft}s`;
+      clearInterval(gameInterval);
+      clearTimeout(targetTimeout);
+      gameArea.innerHTML = "";
+      activeTarget = null;
+    }
+
+    function updateTimer() {
+      timeLeft--;
+      timeEl.textContent = `Tiempo: ${timeLeft}s`;
+      if (timeLeft <= 0) {
+        endGame();
+      }
+    }
+
+    function spawnTarget() {
+      // Evitar crear múltiples objetivos
+      if (activeTarget) {
+        activeTarget.remove();
+        activeTarget = null;
+        clearTimeout(targetTimeout);
+      }
+
+      // Crear un nuevo objetivo
+      const target = document.createElement("div");
+      target.classList.add("target");
+      target.style.top = `${Math.random() * 250}px`;
+      target.style.left = `${Math.random() * 250}px`;
+      target.textContent = "+1";
+
+      // Evento de clic en el objetivo
+      target.addEventListener("click", () => {
+        score++;
+        scoreEl.textContent = `Puntos: ${score}`;
+        target.remove();
+        activeTarget = null; // Limpiar referencia al objetivo actual
+        clearTimeout(targetTimeout); // Cancelar el tiempo de expiración
+        spawnTarget(); // Generar un nuevo objetivo
+      });
+
+      gameArea.appendChild(target);
+      activeTarget = target;
+
+      // Tiempo límite para el objetivo
+      targetTimeout = setTimeout(() => {
+        if (activeTarget) {
+          activeTarget.remove();
+          activeTarget = null;
+          spawnTarget();
+        }
+      }, 1000);
+    }
+
+    function endGame() {
+      clearInterval(gameInterval);
+      clearTimeout(targetTimeout);
+      if (activeTarget) {
+        activeTarget.remove();
+        activeTarget = null;
+      }
+      startBtn.disabled = false;
+      alert(`¡Fin del juego! Puntos totales: ${score}`);
+    }
+  </script>
+</body>
+</html>
+

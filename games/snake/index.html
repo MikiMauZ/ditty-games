@@ -45,6 +45,7 @@
             gap: 10px;
             flex-wrap: wrap;
             justify-content: center;
+            margin-bottom: 20px;
         }
 
         button {
@@ -69,6 +70,32 @@
             background: #555;
         }
 
+        /* Estilos para controles táctiles */
+        .touch-controls {
+            display: none;
+            grid-template-areas:
+                ". up ."
+                "left . right"
+                ". down .";
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .direction-btn {
+            width: 60px;
+            height: 60px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .up-btn { grid-area: up; }
+        .left-btn { grid-area: left; }
+        .right-btn { grid-area: right; }
+        .down-btn { grid-area: down; }
+
         @media (max-width: 600px) {
             .game-container {
                 padding: 10px;
@@ -76,6 +103,10 @@
             
             #gameCanvas {
                 max-width: 100%;
+            }
+
+            .touch-controls {
+                display: grid;
             }
         }
     </style>
@@ -88,6 +119,13 @@
 
     <div class="game-container">
         <canvas id="gameCanvas" width="400" height="400"></canvas>
+    </div>
+
+    <div class="touch-controls">
+        <button class="direction-btn up-btn" onclick="handleDirectionClick('up')">↑</button>
+        <button class="direction-btn left-btn" onclick="handleDirectionClick('left')">←</button>
+        <button class="direction-btn right-btn" onclick="handleDirectionClick('right')">→</button>
+        <button class="direction-btn down-btn" onclick="handleDirectionClick('down')">↓</button>
     </div>
 
     <div class="controls">
@@ -113,6 +151,35 @@
         let gameOver = false;
         
         document.addEventListener('keydown', changeDirection);
+        
+        function handleDirectionClick(direction) {
+            switch(direction) {
+                case 'up':
+                    if (dy === 0) {
+                        dx = 0;
+                        dy = -1;
+                    }
+                    break;
+                case 'down':
+                    if (dy === 0) {
+                        dx = 0;
+                        dy = 1;
+                    }
+                    break;
+                case 'left':
+                    if (dx === 0) {
+                        dx = -1;
+                        dy = 0;
+                    }
+                    break;
+                case 'right':
+                    if (dx === 0) {
+                        dx = 1;
+                        dy = 0;
+                    }
+                    break;
+            }
+        }
         
         function changeDirection(event) {
             const LEFT = 37;
