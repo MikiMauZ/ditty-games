@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- SEO Básico -->
+    <title>Ditty Games - Juegos Casuales Online Gratis</title>
+    <meta name="description" content="Colección de minijuegos gratuitos para jugar online. Incluye tres en raya, memoria, snake y más. Juega solo o con amigos directamente desde tu navegador.">
+    <meta name="keywords" content="juegos online, juegos gratis, minijuegos, juegos casuales, ditty games, tres en raya, memoria, snake">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="URL_DE_TU_SITIO">
+    <meta property="og:title" content="Ditty Games - Juegos Casuales Online">
+    <meta property="og:description" content="Juega gratis a una colección de minijuegos online. Perfectos para pasar el tiempo solo o con amigos.">
+    <meta property="og:image" content="URL_DE_TU_IMAGEN">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="URL_DE_TU_SITIO">
+    <meta name="twitter:title" content="Ditty Games - Juegos Casuales Online">
+    <meta name="twitter:description" content="Juega gratis a una colección de minijuegos online. Perfectos para pasar el tiempo solo o con amigos.">
+    <meta name="twitter:image" content="URL_DE_TU_IMAGEN">
+
+    <!-- Metadatos adicionales -->
+    <meta name="author" content="Tu Nombre">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#4a90e2">
+    
+    <!-- Favicon (recomendado) -->
+    <link rel="icon" type="image/png" href="favicon.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        header {
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #4a90e2;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        @media (min-width: 768px) {
+            .games-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .games-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        .game-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 12px rgba(0,0,0,0.15);
+        }
+
+        .game-image {
+            width: 100%;
+            height: 150px;
+            background: linear-gradient(45deg, #f3f4f6 0%, #fff 100%);
+            border-radius: 10px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 50px;
+        }
+
+        .game-title {
+            font-size: 20px;
+            margin-bottom: 8px;
+            color: #2d3748;
+        }
+
+        .game-players {
+            font-size: 14px;
+            color: #4a90e2;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .game-description {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">Ditty Games</div>
+        <div class="subtitle">¡Diversión instantánea para todos!</div>
+    </header>
+
+    <div class="games-grid" id="gamesContainer">
+        <!-- Los juegos se generarán aquí -->
+    </div>
+
+    <footer>
+        © 2024 Ditty Games - Todos los derechos reservados
+    </footer>
+
+    <script>
+        // Lista de juegos disponibles
+        const games = [
+            {
+                id: "tictactoe",
+                title: "Ditty Tic-Tac-Toe",
+                players: "2 jugadores",
+                description: "El clásico tres en raya con un toque divertido",
+                emoji: "⭕",
+                path: "games/tictactoe/"
+            },
+
+            {
+                id: "memory",
+                title: "Ditty Memory",
+                players: "1 jugador",
+                description: "Encuentra las parejas de animales. ¡Pon a prueba tu memoria!",
+                emoji: "🎴",
+                path: "games/memory/"
+            },
+
+            {
+                id: "snake",
+                title: "Ditty Snake",
+                players: "1 jugador",
+                description: "¡Controla la serpiente y come la mayor cantidad de comida posible sin chocar!",
+                emoji: "🐍",
+                path: "games/snake/"
+            }
+            // Aquí puedes añadir más juegos cuando los crees
+        ];
+
+
+        // Crear una tarjeta de juego
+        function createGameCard(game) {
+            return `
+                <div class="game-card" onclick="openGame('${game.path}')">
+                    <div class="game-image">${game.emoji}</div>
+                    <h2 class="game-title">${game.title}</h2>
+                    <div class="game-players">👥 ${game.players}</div>
+                    <p class="game-description">${game.description}</p>
+                </div>
+            `;
+        }
+
+        // Abrir un juego
+        function openGame(path) {
+            window.location.href = path;
+        }
+
+        // Cargar los juegos cuando la página se inicie
+        window.onload = function() {
+            const container = document.getElementById('gamesContainer');
+            container.innerHTML = games.map(createGameCard).join('');
+        };
+    </script>
+</body>
+</html>
