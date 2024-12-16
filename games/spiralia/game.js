@@ -42,7 +42,7 @@ class SpiraliaDitty {
         const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4'];
         this.players = Array(numPlayers).fill().map((_, i) => ({
             position: 0,
-            crystals: 10,  // Cristales iniciales reducidos a 10
+            crystals: 5,  // Cristales iniciales reducidos a 5
             color: colors[i],
             skippingTurn: false,
             trapped: false
@@ -209,7 +209,7 @@ class SpiraliaDitty {
         this.drawConnectionLines(positions, board);
         
         positions.forEach((pos, i) => {
-            if (i <= 63) {
+            if (i <= 62) {
                 const cell = document.createElement('div');
                 cell.className = 'cell';
                 
@@ -390,37 +390,44 @@ class SpiraliaDitty {
         if (!this.gameOver) {
             let nextPlayer;
             let attempts = 0;
-            
+    
             do {
                 this.currentPlayer = (this.currentPlayer + 1) % this.players.length;
                 nextPlayer = this.players[this.currentPlayer];
                 attempts++;
-                
+    
+                // Verificar si el jugador debe saltarse el turno
+                if (nextPlayer.skippingTurn) {
+                    console.log(`Jugador ${this.currentPlayer + 1} pierde este turno.`);
+                    nextPlayer.skippingTurn = false; // Limpiar skippingTurn después de saltar turno
+                    this.showNotification(`Jugador ${this.currentPlayer + 1} pierde el turno.`);
+                    return this.nextTurn(); // Llamar recursivamente para pasar al siguiente jugador
+                }
+    
                 if (attempts >= this.players.length) {
+                    console.log("Todos los jugadores han sido liberados.");
                     this.players.forEach(p => {
                         p.skippingTurn = false;
                         p.trapped = false;
                     });
                     break;
                 }
+    
             } while (nextPlayer.skippingTurn || nextPlayer.trapped);
-
-            if (nextPlayer.skippingTurn) {
-                nextPlayer.skippingTurn = false;
-            }
-
-            this.checkTrappedPlayers();
-
+    
             this.diceRolled = false;
             this.canModifyDice = false;
             this.movementPhase = false;
             this.diceResult = 0;
+    
             document.querySelectorAll('.die').forEach(die => die.textContent = '?');
             this.updateUI();
-            
+    
             this.showNotification(`Turno del Jugador ${this.currentPlayer + 1}`);
         }
     }
+    
+    
 
     checkTrappedPlayers() {
         this.players.forEach((player, index) => {
@@ -522,7 +529,7 @@ class SpiraliaDitty {
         const player = this.players[this.currentPlayer];
         player.crystals = Math.min(this.maxCrystals, player.crystals + 5);
         player.skippingTurn = true;
-        this.showNotification("¡Has llegado al Santuario! +5 cristales, pero perderás el siguiente turno");
+        this.showNotification("¡Has llegado al Santuario! +5 cristales, pero perderás el siguiente turno.");
         this.finishTurn();
     }
     

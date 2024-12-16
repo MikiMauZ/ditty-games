@@ -1,3 +1,5 @@
+
+
 body {
     margin: 0;
     padding: 20px;
@@ -228,50 +230,6 @@ body {
     }
 }
 
-@media (max-width: 768px) {
-    body {
-        padding: 10px;
-    }
-
-    .game-board {
-        min-height: 500px;
-        padding: 10px;
-    }
-
-    .spiral-path {
-        transform: scale(0.6);
-    }
-
-    .cell {
-        width: 60px;
-        height: 60px;
-        font-size: 14px;
-    }
-
-    .player-buttons {
-        grid-template-columns: 1fr;
-    }
-
-    .controls {
-        grid-template-columns: 1fr;
-        padding: 10px;
-    }
-}
-
-@media (max-width: 480px) {
-    .spiral-path {
-        transform: scale(0.4);
-    }
-
-    .game-board {
-        min-height: 400px;
-    }
-
-    .player-info {
-        grid-template-columns: 1fr;
-    }
-}
-
 .controls {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -416,6 +374,7 @@ body.modal-active .modal {
     z-index: 1000;
 }
 
+
 @keyframes roll {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
@@ -434,4 +393,57 @@ body.modal-active .modal {
 @keyframes slideIn {
     from { transform: translateX(100%); }
     to { transform: translateX(0); }
+}
+
+@media (max-width: 768px) {
+    .game-board {
+        overflow: auto; /* Agrega desplazamiento si es necesario */
+        max-width: 100%; /* Limita el ancho máximo */
+        max-height: 80vh; /* Limita la altura máxima */
+    }
+    .spiral-path {
+        width: 800px; /* Mantén el tamaño original */
+        height: 800px;
+    }
+}
+
+@media (max-width: 480px) {
+    .spiral-path {
+        width: 350px; /* Reduce aún más en móviles */
+        height: 350px;
+    }
+
+    .game-board {
+        min-height: 400px; /* Ajusta la altura total */
+    }
+
+    .controls button {
+        font-size: 0.9em; /* Reduce ligeramente el tamaño de los botones */
+        padding: 8px 10px;
+    }
+}
+@media (max-width: 768px) {
+    .controls {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 10px;
+        padding: 10px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+    .controls button {
+        font-size: 0.9em;
+        padding: 5px 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .game-container {
+        transform: scale(0.8); /* Escala todo el contenido */
+        transform-origin: top center; /* Mantén la escala centrada */
+    }
 }
