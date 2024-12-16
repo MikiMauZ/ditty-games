@@ -41,11 +41,14 @@
 
             <div class="controls">
                 <button id="meditate-btn">Meditar (+3 cristales)</button>
-                <button id="roll-one-btn">Lanzar 1 Dado (gratis)</button>
+                <button id="roll-one-btn">Lanzar 1 Dado (+1 Cristal)</button>
                 <button id="roll-two-btn">Lanzar 2 Dados (-2 cristales)</button>
-                <button id="modify-up-btn" disabled>+1 (-1 cristal)</button>
-                <button id="modify-down-btn" disabled>-1 (-1 cristal)</button>
+                <button id="modify-up-btn" disabled> Dado +1 (Paga 2 cristales)</button>
+                <button id="modify-down-btn" disabled>Dado -1 (Paga 2 cristales)</button>
                 <button id="move-btn" disabled>Mover Ficha</button>
+            </div>
+            
+            <div class="secondary-controls">
                 <button id="restart-btn">Reiniciar Juego</button>
                 <button class="back-button" onclick="window.location.href='../../index.html'">Volver al Menú</button>
             </div>
@@ -59,7 +62,7 @@
             <div id="modal-buttons"></div>
         </div>
     </div>
-    
+
     <div class="event-notification" id="event-notification"></div>
 
     <script src="game.js"></script>

@@ -217,6 +217,55 @@ body {
     white-space: nowrap;
 }
 
+.controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+/* Botones de acción principal */
+.controls button {
+    font-size: 1em;
+    padding: 10px 15px;
+    background: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    transition: background 0.3s ease;
+}
+
+.controls button:hover {
+    background: #357abd;
+    cursor: pointer;
+}
+
+/* Nueva sección de botones secundarios */
+.secondary-controls {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    border-top: 2px solid #ddd;
+    padding-top: 15px;
+}
+
+.secondary-controls button {
+    background: #e74c3c; /* Color llamativo pero diferente */
+    color: white;
+    font-size: 0.9em;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 8px;
+    transition: background 0.3s ease;
+}
+
+.secondary-controls button:hover {
+    background: #c0392b;
+    cursor: pointer;
+}
+
 /* Resto de estilos igual que antes... */
 
 @media (max-width: 900px) {
@@ -422,10 +471,91 @@ body.modal-active .modal {
         padding: 8px 10px;
     }
 }
+/* Controles principales flotantes solo en PC */
+@media (min-width: 769px) { 
+    .controls {
+        position: fixed; /* Hace que los botones floten */
+        right: 20px; /* Pegados al lado derecho */
+        top: 50%; /* Centra verticalmente */
+        transform: translateY(-50%); /* Ajusta el centro exacto */
+        display: flex;
+        flex-direction: column; /* Apila los botones verticalmente */
+        gap: 10px; /* Espaciado entre botones */
+        background: rgba(255, 255, 255, 0.9); /* Fondo semitransparente */
+        border-radius: 10px;
+        padding: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        z-index: 1000; /* Se asegura de que estén por encima del tablero */
+    }
 
-@media (max-width: 480px) {
-    .game-container {
-        transform: scale(0.8); /* Escala todo el contenido */
-        transform-origin: top center; /* Mantén la escala centrada */
+    .controls button {
+        font-size: 1em;
+        padding: 10px 15px;
+        background: #4a90e2; /* Color principal */
+        color: white;
+        border: none;
+        border-radius: 8px;
+        transition: background 0.3s ease;
+    }
+
+    .controls button:hover {
+        background: #357abd; /* Cambio de color al pasar el ratón */
+        cursor: pointer;
+    }
+
+    /* Separar botones secundarios en el lateral inferior izquierdo */
+    .secondary-controls {
+        position: fixed;
+        left: 20px;
+        bottom: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 10px;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    .secondary-controls button {
+        background: #e74c3c;
+        color: white;
+        font-size: 0.9em;
+        padding: 8px 12px;
+        border: none;
+        border-radius: 8px;
+        transition: background 0.3s ease;
+    }
+
+    .secondary-controls button:hover {
+        background: #c0392b;
+    }
+
+    .dice-container {
+        position: fixed; /* Fija la posición en la pantalla */
+        right: 20px; /* Alineado con los controles */
+        top: 10%; /* Colocado por encima de los controles */
+        transform: translateY(-50%);
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        z-index: 1100; /* Encima de los controles */
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 10px;
+        padding: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    .dice-container .die {
+        width: 50px; /* Tamaño de los dados */
+        height: 50px;
+        font-size: 1.5em; /* Tamaño del texto */
+        border: 3px solid #4a90e2;
+        border-radius: 10px;
+        background: white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
 }
