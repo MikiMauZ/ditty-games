@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ditty Spiralia</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #666;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .game-title {
+            color: #4a90e2;
+            font-size: 2em;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .game-info {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.2em;
+        }
+
+        .game-board {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+            position: relative;
+            min-height: 700px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .spiral-path {
+            position: relative;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle at center, #f5f7fa, #e3e8f0);
+            border-radius: 50%;
+        }
+
+        .cell {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border: 3px solid #4a90e2;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 14px;
+            font-weight: bold;
+            background: white;
+            transition: all 0.3s ease;
+            cursor: help;
+        }
+
+        .cell::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            z-index: -1;
+        }
+
+        /* Estilos especiales para cada tipo de casilla */
+        .cell.portal {
+            border-color: #FFD700;
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            color: white;
+        }
+
+        .cell.bridge {
+            border-color: #9B59B6;
+            background: linear-gradient(45deg, #9B59B6, #8E44AD);
+            color: white;
+        }
+
+        .cell.sanctuary {
+            border-color: #2ECC71;
+            background: linear-gradient(45deg, #2ECC71, #27AE60);
+            color: white;
+        }
+
+        .cell.vortex {
+            border-color: #E74C3C;
+            background: linear-gradient(45deg, #E74C3C, #C0392B);
+            color: white;
+        }
+
+        .cell.labyrinth {
+            border-color: #3498DB;
+            background: linear-gradient(45deg, #3498DB, #2980B9);
+            color: white;
+        }
+
+        .cell.void {
+            border-color: #34495E;
+            background: linear-gradient(45deg, #34495E, #2C3E50);
+            color: white;
+        }
+
+        .cell:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 5px 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 1000;
+        }
+
+        .player {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            position: absolute;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            z-index: 2;
+        }
+
+        .player::after {
+            content: attr(data-player);
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            font-weight: bold;
+            color: #666;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            background: #4a90e2;
+            color: white;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: #357abd;
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .back-button {
+            background: #666;
+        }
+
+        .back-button:hover {
+            background: #555;
+        }
+
+        .player-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .player-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .player-card.active {
+            transform: scale(1.05);
+            box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+        }
+
+        .dice-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .die {
+            width: 60px;
+            height: 60px;
+            border: 3px solid #4a90e2;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.8em;
+            background: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .die.rolling {
+            animation: roll 0.6s ease;
+        }
+
+        @keyframes roll {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .event-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .spiral-path {
+                width: 300px;
+                height: 300px;
+            }
+
+            .cell {
+                width: 30px;
+                height: 30px;
+                font-size: 10px;
+            }
+
+            .game-board {
+                min-height: 350px;
+            }
+
+            .controls {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="game-title">Ditty Spiralia</h1>
+        
+        <div class="game-info">
+            <div>Turno del Jugador: <span id="current-player">1</span></div>
+        </div>
+
+        <div class="player-info" id="player-info">
+            <!-- Se generará dinámicamente -->
+        </div>
+
+        <div class="game-board">
+            <div class="spiral-path" id="spiral-path">
+                <!-- Se generará dinámicamente -->
+            </div>
+        </div>
+
+        <div class="dice-container" id="dice-container">
+            <div class="die" id="die1">?</div>
+            <div class="die" id="die2">?</div>
+        </div>
+
+        <div class="controls">
+            <button id="meditate-btn">Meditar (+3 cristales)</button>
+            <button id="roll-one-btn">Lanzar 1 Dado (gratis)</button>
+            <button id="roll-two-btn">Lanzar 2 Dados (-2 cristales)</button>
+            <button id="modify-up-btn" disabled>+1 (-1 cristal)</button>
+            <button id="modify-down-btn" disabled>-1 (-1 cristal)</button>
+            <button id="move-btn" disabled>Mover Ficha</button>
+            <button id="restart-btn">Reiniciar Juego</button>
+            <button class="back-button" onclick="window.location.href='../../index.html'">Volver al Menú</button>
+        </div>
+    </div>
+
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <h2 id="modal-title"></h2>
+            <p id="modal-text"></p>
+            <div id="modal-buttons"></div>
+        </div>
+    </div>
+
+    <div class="event-notification" id="event-notification"></div>
+
+    <script>
+
+        // El código JavaScript vendrá en el siguiente mensaje para mantener la organización
+class SpiraliaDitty {
+    constructor() {
+        this.players = [];
+        this.currentPlayer = 0;
+        this.diceResult = 0;
+        this.gameOver = false;
+        this.diceRolled = false;
+        this.canModifyDice = false;
+        this.movementPhase = false;
+        
+        this.specialCells = {
+            portal: [7, 14, 21, 28, 35, 42, 49, 56],
+            bridge: [6, 12],
+            sanctuary: [19],
+            vortex: [31],
+            labyrinth: [42],
+            void: [58]
+        };
+
+        this.cellDescriptions = {
+            portal: "Portal Espiral: Paga 2 cristales para transportarte al siguiente portal",
+            bridge: "Puente Dimensional: Paga 3 cristales para moverte al otro puente",
+            sanctuary: "Santuario: Recupera 5 cristales pero pierdes el siguiente turno",
+            vortex: "Vórtice Temporal: Paga 4 cristales o quedarás atrapado",
+            labyrinth: "Laberinto Astral: Paga 3 cristales o retrocede a la casilla 30",
+            void: "Vacío Primordial: Paga 5 cristales o regresa a la casilla 1"
+        };
+        
+        this.initGame();
+        this.setupEventListeners();
+        this.drawBoard();
+        this.updateUI();
+    }
+
+    initGame() {
+        const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4'];
+        this.players = Array(4).fill().map((_, i) => ({
+            position: 0,
+            crystals: 20,
+            color: colors[i],
+            skippingTurn: false,
+            trapped: false
+        }));
+    }
+
+    setupEventListeners() {
+        document.getElementById('meditate-btn').addEventListener('click', () => this.meditate());
+        document.getElementById('roll-one-btn').addEventListener('click', () => this.rollDice(1));
+        document.getElementById('roll-two-btn').addEventListener('click', () => this.rollDice(2));
+        document.getElementById('modify-up-btn').addEventListener('click', () => this.modifyDice(1));
+        document.getElementById('modify-down-btn').addEventListener('click', () => this.modifyDice(-1));
+        document.getElementById('move-btn').addEventListener('click', () => this.movePlayer());
+        document.getElementById('restart-btn').addEventListener('click', () => this.restartGame());
+    }
+
+    drawBoard() {
+        const board = document.getElementById('spiral-path');
+        board.innerHTML = '';
+        
+        // Crear células en espiral
+        for (let i = 0; i <= 63; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            
+            // Añadir clases especiales y tooltips
+            for (const [type, cells] of Object.entries(this.specialCells)) {
+                if (cells.includes(i)) {
+                    cell.classList.add(type);
+                    cell.setAttribute('data-tooltip', this.cellDescriptions[type]);
+                }
+            }
+            
+            cell.textContent = i;
+            
+            // Calcular posición en espiral con más vueltas y más espacio
+            const angle = (i / 63) * Math.PI * 10; // Más vueltas
+            const radius = (1 - i / 63) * 280; // Radio más grande
+            const x = 300 + radius * Math.cos(angle);
+            const y = 300 + radius * Math.sin(angle);
+            
+            cell.style.left = `${x}px`;
+            cell.style.top = `${y}px`;
+            
+            board.appendChild(cell);
+        }
+
+        // Dibujar jugadores
+        this.players.forEach((player, i) => {
+            const playerToken = document.createElement('div');
+            playerToken.className = 'player';
+            playerToken.id = `player-${i}`;
+            playerToken.style.backgroundColor = player.color;
+            playerToken.setAttribute('data-player', `J${i + 1}`);
+            board.appendChild(playerToken);
+        });
+
+        this.updatePlayerPositions();
+    }
+
+    showModal(title, text, buttons = []) {
+        const modal = document.getElementById('modal');
+        document.getElementById('modal-title').textContent = title;
+        document.getElementById('modal-text').textContent = text;
+        
+        const buttonContainer = document.getElementById('modal-buttons');
+        buttonContainer.innerHTML = '';
+        buttons.forEach(btn => {
+            const button = document.createElement('button');
+            button.textContent = btn.text;
+            button.onclick = () => {
+                btn.action();
+                modal.style.display = 'none';
+            };
+            buttonContainer.appendChild(button);
+        });
+        
+        modal.style.display = 'flex';
+    }
+
+    showNotification(text, duration = 3000) {
+        const notification = document.getElementById('event-notification');
+        notification.textContent = text;
+        notification.style.display = 'block';
+        
+        setTimeout(() => {
+            notification.style.display = 'none';
+        }, duration);
+    }
+
+    updatePlayerPositions() {
+        this.players.forEach((player, i) => {
+            const token = document.getElementById(`player-${i}`);
+            if (token) {
+                const cell = document.querySelector(`.cell:nth-child(${player.position + 1})`);
+                if (cell) {
+                    const rect = cell.getBoundingClientRect();
+                    const boardRect = document.getElementById('spiral-path').getBoundingClientRect();
+                    
+                    token.style.left = `${rect.left - boardRect.left + 10}px`;
+                    token.style.top = `${rect.top - boardRect.top + 10}px`;
+                }
+            }
+        });
+    }
+
+    updateUI() {
+        // Actualizar información de jugadores
+        const playerInfo = document.getElementById('player-info');
+        playerInfo.innerHTML = this.players.map((player, i) => `
+            <div class="player-card ${i === this.currentPlayer ? 'active' : ''}" style="border: 2px solid ${player.color}">
+                <div>Jugador ${i + 1}</div>
+                <div>Posición: ${player.position}</div>
+                <div>Cristales: ${player.crystals}</div>
+                ${player.skippingTurn ? '<div>Saltará el siguiente turno</div>' : ''}
+                ${player.trapped ? '<div>¡Atrapado!</div>' : ''}
+            </div>
+        `).join('');
+
+        document.getElementById('current-player').textContent = this.currentPlayer + 1;
+        
+        // Actualizar estados de botones
+        const player = this.players[this.currentPlayer];
+        document.getElementById('roll-two-btn').disabled = player.crystals < 2 || this.diceRolled;
+        document.getElementById('roll-one-btn').disabled = this.diceRolled;
+        document.getElementById('modify-up-btn').disabled = !this.canModifyDice || player.crystals < 1;
+        document.getElementById('modify-down-btn').disabled = !this.canModifyDice || player.crystals < 1;
+        document.getElementById('move-btn').disabled = !this.movementPhase;
+        document.getElementById('meditate-btn').disabled = this.diceRolled;
+    }
+
+    meditate() {
+        const player = this.players[this.currentPlayer];
+        player.crystals = Math.min(25, player.crystals + 3);
+        this.showNotification(`Jugador ${this.currentPlayer + 1} medita y recupera 3 cristales`);
+        this.nextTurn();
+    }
+
+    rollDice(count) {
+        const dice = document.querySelectorAll('.die');
+        const results = Array(count).fill().map(() => Math.floor(Math.random() * 6) + 1);
+        
+        // Animación de dados
+        dice.forEach(die => die.classList.add('rolling'));
+        
+        setTimeout(() => {
+            dice.forEach((die, i) => {
+                die.classList.remove('rolling');
+                die.textContent = i < results.length ? results[i] : '?';
+            });
+            
+            this.diceResult = results.reduce((a, b) => a + b, 0);
+            
+            if (count === 2) {
+                this.players[this.currentPlayer].crystals -= 2;
+            }
+            
+            this.diceRolled = true;
+            this.canModifyDice = true;
+            this.showNotification(`Resultado de los dados: ${this.diceResult}`);
+            this.updateUI();
+        }, 600);
+    }
+
+    modifyDice(amount) {
+        if (this.canModifyDice && this.players[this.currentPlayer].crystals >= 1) {
+            this.players[this.currentPlayer].crystals--;
+            this.diceResult += amount;
+            this.showNotification(`Resultado modificado a: ${this.diceResult}`);
+            this.movementPhase = true;
+            this.updateUI();
+        }
+    }
+
+    movePlayer() {
+        const player = this.players[this.currentPlayer];
+        let newPosition = player.position + this.diceResult;
+        
+        if (newPosition > 63) {
+            newPosition = 63 - (newPosition - 63);
+            this.showNotification("¡Te pasaste! Retrocediendo...");
+        }
+        
+        player.position = newPosition;
+        this.updatePlayerPositions();
+        
+        // Comprobar casilla especial después del movimiento
+        setTimeout(() => {
+            this.checkSpecialCell();
+        }, 300);
+    }
+
+    checkSpecialCell() {
+        const player = this.players[this.currentPlayer];
+        const position = player.position;
+
+        // Portal Espiral
+        if (this.specialCells.portal.includes(position)) {
+            this.showModal(
+                "Portal Espiral",
+                "¿Deseas pagar 2 cristales para transportarte al siguiente portal?",
+                [
+                    {
+                        text: "Sí (2 cristales)",
+                        action: () => {
+                            if (player.crystals >= 2) {
+                                player.crystals -= 2;
+                                const nextPortalIndex = this.specialCells.portal.findIndex(p => p > position);
+                                if (nextPortalIndex !== -1) {
+                                    player.position = this.specialCells.portal[nextPortalIndex];
+                                    this.updatePlayerPositions();
+                                    this.showNotification("¡Te has transportado a través del portal!");
+                                }
+                            }
+                            this.finishTurn();
+                        }
+                    },
+                    {
+                        text: "No",
+                        action: () => this.finishTurn()
+                    }
+                ]
+            );
+            return;
+        }
+
+        // Puente Dimensional
+        if (this.specialCells.bridge.includes(position)) {
+            const otherBridge = this.specialCells.bridge.find(b => b !== position);
+            this.showModal(
+                "Puente Dimensional",
+                "¿Deseas pagar 3 cristales para moverte al otro puente?",
+                [
+                    {
+                        text: "Sí (3 cristales)",
+                        action: () => {
+                            if (player.crystals >= 3) {
+                                player.crystals -= 3;
+                                player.position = otherBridge;
+                                this.updatePlayerPositions();
+                                this.showNotification("¡Has cruzado el puente dimensional!");
+                            }
+                            this.finishTurn();
+                        }
+                    },
+                    {
+                        text: "No",
+                        action: () => this.finishTurn()
+                    }
+                ]
+            );
+            return;
+        }
+
+        // Santuario
+        if (this.specialCells.sanctuary.includes(position)) {
+            player.crystals = Math.min(25, player.crystals + 5);
+            player.skippingTurn = true;
+            this.showNotification("¡Has llegado al Santuario! +5 cristales, pero perderás el siguiente turno");
+            this.finishTurn();
+            return;
+        }
+
+        // Vórtice Temporal
+        if (this.specialCells.vortex.includes(position)) {
+            this.showModal(
+                "Vórtice Temporal",
+                "¡Has caído en el Vórtice! Paga 4 cristales o quedarás atrapado hasta que otro jugador pase por aquí",
+                [
+                    {
+                        text: "Pagar 4 cristales",
+                        action: () => {
+                            if (player.crystals >= 4) {
+                                player.crystals -= 4;
+                                this.showNotification("Has resistido el Vórtice Temporal");
+                            } else {
+                                player.trapped = true;
+                                this.showNotification("¡Has quedado atrapado en el Vórtice!");
+                            }
+                            this.finishTurn();
+                        }
+                    },
+                    {
+                        text: "Quedar atrapado",
+                        action: () => {
+                            player.trapped = true;
+                            this.showNotification("¡Has quedado atrapado en el Vórtice!");
+                            this.finishTurn();
+                        }
+                    }
+                ]
+            );
+            return;
+        }
+
+        // Laberinto Astral
+        if (this.specialCells.labyrinth.includes(position)) {
+            this.showModal(
+                "Laberinto Astral",
+                "¡Has entrado al Laberinto! Paga 3 cristales o retrocederás a la casilla 30",
+                [
+                    {
+                        text: "Pagar 3 cristales",
+                        action: () => {
+                            if (player.crystals >= 3) {
+                                player.crystals -= 3;
+                                this.showNotification("Has mantenido el rumbo en el Laberinto");
+                            } else {
+                                player.position = 30;
+                                this.updatePlayerPositions();
+                                this.showNotification("¡Te has perdido en el Laberinto!");
+                            }
+                            this.finishTurn();
+                        }
+                    },
+                    {
+                        text: "Retroceder",
+                        action: () => {
+                            player.position = 30;
+                            this.updatePlayerPositions();
+                            this.showNotification("¡Te has perdido en el Laberinto!");
+                            this.finishTurn();
+                        }
+                    }
+                ]
+            );
+            return;
+        }
+
+        // Vacío Primordial
+        if (this.specialCells.void.includes(position)) {
+            this.showModal(
+                "Vacío Primordial",
+                "¡Has caído en el Vacío! Paga 5 cristales o regresarás a la casilla 1",
+                [
+                    {
+                        text: "Pagar 5 cristales",
+                        action: () => {
+                            if (player.crystals >= 5) {
+                                player.crystals -= 5;
+                                this.showNotification("¡Has resistido el poder del Vacío!");
+                            } else {
+                                player.position = 1;
+                                this.updatePlayerPositions();
+                                this.showNotification("¡El Vacío te ha enviado al inicio!");
+                            }
+                            this.finishTurn();
+                        }
+                    },
+                    {
+                        text: "Regresar al inicio",
+                        action: () => {
+                            player.position = 1;
+                            this.updatePlayerPositions();
+                            this.showNotification("¡El Vacío te ha enviado al inicio!");
+                            this.finishTurn();
+                        }
+                    }
+                ]
+            );
+            return;
+        }
+
+        // Verificar colisión con otros jugadores
+        this.checkPlayerCollision();
+    }
+
+    checkPlayerCollision() {
+        const currentPlayer = this.players[this.currentPlayer];
+        const otherPlayerInSamePosition = this.players.find(
+            (p, i) => i !== this.currentPlayer && p.position === currentPlayer.position
+        );
+
+        if (otherPlayerInSamePosition) {
+            this.showModal(
+                "¡Confluencia!",
+                "Has caído en una casilla ocupada. ¿Qué deseas hacer?",
+                [
+                    {
+                        text: "Coexistir Pacíficamente (2 cristales)",
+                        action: () => {
+                            if (currentPlayer.crystals >= 2) {
+                                currentPlayer.crystals -= 2;
+                                this.showNotification("Coexistencia pacífica establecida");
+                                this.finishTurn();
+                            } else {
+                                this.showNotification("No tienes suficientes cristales para coexistir");
+                            }
+                        }
+                    },
+                    {
+                        text: "Retroceder (gratis)",
+                        action: () => {
+                            currentPlayer.position--;
+                            this.updatePlayerPositions();
+                            this.showNotification("Has retrocedido una casilla");
+                            this.finishTurn();
+                        }
+                    },
+                    {
+                        text: "Iniciar Desafío (1 cristal)",
+                        action: () => {
+                            if (currentPlayer.crystals >= 1) {
+                                this.initiateChallenge(otherPlayerInSamePosition);
+                            } else {
+                                this.showNotification("No tienes suficientes cristales para desafiar");
+                                this.finishTurn();
+                            }
+                        }
+                    }
+                ]
+            );
+        } else {
+            this.finishTurn();
+        }
+    }
+
+    initiateChallenge(opponent) {
+        const currentPlayer = this.players[this.currentPlayer];
+        currentPlayer.crystals--;
+
+        const currentRoll = Math.floor(Math.random() * 6) + 1;
+        const opponentRoll = Math.floor(Math.random() * 6) + 1;
+
+        this.showModal(
+            "Desafío Dimensional",
+            `Resultado del desafío:\nJugador ${this.currentPlayer + 1}: ${currentRoll}\nOponente: ${opponentRoll}`,
+            [
+                {
+                    text: "Modificar mi resultado (+1 cristal)",
+                    action: () => {
+                        if (currentPlayer.crystals >= 1) {
+                            currentPlayer.crystals--;
+                            this.resolveChallenge(currentRoll + 1, opponentRoll, opponent);
+                        }
+                    }
+                },
+                {
+                    text: "Aceptar resultado",
+                    action: () => {
+                        this.resolveChallenge(currentRoll, opponentRoll, opponent);
+                    }
+                }
+            ]
+        );
+    }
+
+    resolveChallenge(currentRoll, opponentRoll, opponent) {
+        if (currentRoll > opponentRoll) {
+            opponent.position -= 3;
+            this.showNotification("¡Has ganado el desafío! Tu oponente retrocede 3 casillas");
+        } else {
+            this.players[this.currentPlayer].position -= 3;
+            this.showNotification("Has perdido el desafío. Retrocedes 3 casillas");
+        }
+        this.updatePlayerPositions();
+        this.finishTurn();
+    }
+
+    finishTurn() {
+        const currentPlayer = this.players[this.currentPlayer];
+        
+        // Verificar victoria
+        if (currentPlayer.position === 63 && currentPlayer.crystals >= 1) {
+            this.gameOver = true;
+            this.showModal(
+                "¡Victoria!",
+                `¡El Jugador ${this.currentPlayer + 1} ha ganado el juego!`,
+                [{
+                    text: "Nueva Partida",
+                    action: () => this.restartGame()
+                }]
+            );
+            return;
+        }
+
+        this.nextTurn();
+    }
+
+    nextTurn() {
+        if (!this.gameOver) {
+            do {
+                this.currentPlayer = (this.currentPlayer + 1) % this.players.length;
+            } while (this.players[this.currentPlayer].skippingTurn || 
+                    this.players[this.currentPlayer].trapped);
+
+            // Resetear estado de salto de turno
+            if (this.players[this.currentPlayer].skippingTurn) {
+                this.players[this.currentPlayer].skippingTurn = false;
+            }
+
+            // Verificar si algún jugador atrapado debe ser liberado
+            this.checkTrappedPlayers();
+
+            this.diceRolled = false;
+            this.canModifyDice = false;
+            this.movementPhase = false;
+            this.diceResult = 0;
+            document.querySelectorAll('.die').forEach(die => die.textContent = '?');
+            this.updateUI();
+        }
+    }
+
+    checkTrappedPlayers() {
+        this.players.forEach((player, index) => {
+            if (player.trapped) {
+                const someoneInSamePosition = this.players.some(
+                    (p, i) => i !== index && p.position === player.position
+                );
+                if (someoneInSamePosition) {
+                    player.trapped = false;
+                    this.showNotification(`¡Jugador ${index + 1} ha sido liberado del Vórtice!`);
+                }
+            }
+        });
+    }
+
+    restartGame() {
+        this.initGame();
+        this.gameOver = false;
+        this.currentPlayer = 0;
+        this.diceResult = 0;
+        this.diceRolled = false;
+        this.canModifyDice = false;
+        this.movementPhase = false;
+        this.drawBoard();
+        this.updateUI();
+        this.showNotification("¡Nueva partida iniciada!");
+    }
+}
+
+// Iniciar el juego cuando se carga la página
+window.addEventListener('load', () => {
+    window.game = new SpiraliaDitty();
+});
+
+    // Continuará en el siguiente mensaje...
+    
+
+    </script>
+</body>
+</html>
