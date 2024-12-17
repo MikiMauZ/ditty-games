@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ditty Memory Duel</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Contenedor Principal -->
+  <div class="game-container">
+    <!-- Encabezado -->
+    <header class="game-header">
+      <h1 class="game-title">Ditty Memory Duel</h1>
+      <p class="game-subtitle">¡Compite para resolver el tablero antes que tu oponente!</p>
+    </header>
+
+    <!-- Tableros de Jugadores -->
+    <div class="boards">
+      <div class="player-grid" id="player1">
+        <h2>Jugador 1</h2>
+        <div class="grid" id="grid1"></div>
+      </div>
+      <div class="player-grid" id="player2">
+        <h2>Jugador 2</h2>
+        <div class="grid" id="grid2"></div>
+      </div>
+    </div>
+
+    <!-- Controles -->
+    <div class="controls">
+      <button id="restart" class="btn">Reiniciar Juego</button>
+      <button class="btn back-button" onclick="window.location.href='../../index.html'">Volver al Menú</button>
+    </div>
+  </div>
+  
+  <script src="script.js"></script>
+</body>
+</html>

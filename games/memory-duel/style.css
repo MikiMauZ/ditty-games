@@ -1,0 +1,153 @@
+/* General */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  color: #666;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  text-align: center;
+}
+
+.game-container {
+  background: #fff;
+  border-radius: 15px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  padding: 20px;
+  width: 90%;
+  max-width: 700px;
+}
+
+.game-header {
+  margin-bottom: 20px;
+}
+
+.game-title {
+  font-size: 2.2em;
+  color: #4a90e2;
+  margin: 0;
+}
+
+.game-subtitle {
+  font-size: 1em;
+  color: #666;
+  margin-top: 5px;
+}
+
+.boards {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+}
+
+.player-grid {
+  text-align: center;
+  margin: 10px 0;
+}
+
+h2 {
+  font-size: 1.2em;
+  color: #4a90e2;
+  margin-bottom: 10px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  width: 220px;
+}
+
+.card {
+  background: #e0e0e0;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 50px;
+  height: 50px;
+  font-size: 1.5em;
+  color: transparent;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.3s;
+}
+
+.card.flipped {
+  background: #4a90e2;
+  color: white;
+}
+
+.controls {
+  margin-top: 20px;
+}
+
+.btn {
+  background: #4a90e2;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1em;
+  transition: background 0.3s;
+  margin: 5px;
+}
+
+.btn:hover {
+  background: #357abd;
+}
+
+.back-button {
+  background: #666;
+}
+
+.back-button:hover {
+  background: #444;
+}
+
+/* Estilo Responsive: Modo Mesa */
+@media (max-width: 600px) {
+  body {
+    justify-content: center; /* Centra todo en el eje vertical */
+    align-items: center; /* Centra todo en el eje horizontal */
+    flex-direction: column;
+    gap: 20px; /* Espacio entre los tableros */
+  }
+
+  .boards {
+    display: flex;
+    flex-direction: column;
+    gap: 30px; /* Espacio entre los tableros */
+  }
+
+  /* Jugador 2 (arriba, girado) */
+  .player-grid:first-child {
+    transform: rotate(180deg);
+  }
+
+  /* Jugador 1 (abajo, normal) */
+  .player-grid:last-child {
+    transform: rotate(0deg);
+  }
+
+  h2 {
+    font-size: 1.2em;
+    margin-bottom: 10px;
+  }
+
+  .grid {
+    margin: 0 auto; /* Centra las cuadrículas horizontalmente */
+    gap: 5px; /* Espacio entre cartas */
+    width: 180px;
+  }
+
+  .card {
+    width: 40px;
+    height: 40px;
+    line-height: 40px;
+    font-size: 1.2em;
+  }
+}
