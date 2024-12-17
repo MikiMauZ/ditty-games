@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ditty Color Match</title>
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .game-title {
+            color: #4a90e2;
+            font-size: 2em;
+            margin: 20px 0;
+        }
+
+        .game-info {
+            color: #666;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 20px;
+            max-width: 800px;
+            width: 90%;
+        }
+
+        .target-color {
+            width: 100%;
+            height: 100px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .players-container {
+            display: flex;
+            gap: 20px;
+        }
+
+        .player-section {
+            flex: 1;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 20px;
+            position: relative;
+        }
+
+        .player-color {
+            width: 100%;
+            height: 100px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .slider-container {
+            margin: 10px 0;
+        }
+
+        .slider-label {
+            display: block;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+        }
+
+        .controls {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            background: #4a90e2;
+            color: white;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        button:hover {
+            background: #357abd;
+        }
+
+        button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+
+        button.back-button {
+            background: #666;
+        }
+
+        .score {
+            font-size: 1.5em;
+            color: #4a90e2;
+            margin-bottom: 10px;
+        }
+
+        .timer-display {
+            position: fixed;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #4a90e2;
+            color: white;
+            padding: 15px;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            z-index: 100;
+        }
+
+        .key-controls {
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 0;
+                height: 100vh;
+                overflow: hidden;
+            }
+
+            .game-title, .game-info {
+                display: none;
+            }
+
+            .game-container {
+                width: 100%;
+                height: 100vh;
+                margin: 0;
+                padding: 0;
+                border-radius: 0;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .players-container {
+                flex-direction: column;
+                height: 100%;
+                gap: 0;
+                position: relative;
+            }
+
+            .target-color {
+                height: 60px;
+                margin: 10px;
+                order: 2;
+            }
+
+            .player-section {
+                flex: 1;
+                padding: 10px;
+                border-radius: 0;
+                box-shadow: none;
+            }
+
+            /* Jugador 1 (abajo) */
+            .player-section:first-child {
+                order: 3;
+            }
+
+            /* Jugador 2 (arriba) */
+            .player-section:last-child {
+                order: 1;
+                transform: rotate(180deg);
+            }
+
+            .player-section:last-child .slider-container,
+            .player-section:last-child .score {
+                transform: rotate(180deg);
+            }
+
+            .controls {
+                position: fixed;
+                right: 10px;
+                top: 50%;
+                transform: translateY(-50%);
+                display: flex;
+                flex-direction: column;
+                z-index: 100;
+            }
+
+            .controls button {
+                padding: 8px;
+                font-size: 0.8em;
+                width: 80px;
+            }
+
+            .player-color {
+                height: 60px;
+            }
+
+            input[type="range"] {
+                height: 30px;
+            }
+
+            .timer-display {
+                width: 40px;
+                height: 40px;
+                font-size: 1.2em;
+            }
+
+            .key-controls {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1 class="game-title">Ditty Color Match</h1>
+    <div class="game-info">
+        <span id="round-info">Ronda: 1</span>
+        <span id="time-info">Tiempo: --</span>
+    </div>
+
+    <div class="timer-display" id="timerDisplay">--</div>
+
+    <div class="game-container">
+        <div class="players-container">
+            <div class="player-section">
+                <div class="score">Jugador 1: <span id="score1">0</span></div>
+                <div class="player-color" id="player1Color"></div>
+                <div class="slider-container">
+                    <label class="slider-label">Tono (Hue)</label>
+                    <input type="range" min="0" max="360" value="0" class="slider" id="hue1">
+                    <div class="key-controls">A/D - Ajustar</div>
+                    
+                    <label class="slider-label">Saturación</label>
+                    <input type="range" min="0" max="100" value="50" class="slider" id="saturation1">
+                    <div class="key-controls">W/S - Ajustar</div>
+                    
+                    <label class="slider-label">Luminosidad</label>
+                    <input type="range" min="0" max="100" value="50" class="slider" id="lightness1">
+                    <div class="key-controls">Q/E - Ajustar</div>
+                </div>
+            </div>
+
+            <div class="target-color" id="targetColor"></div>
+
+            <div class="player-section">
+                <div class="score">Jugador 2: <span id="score2">0</span></div>
+                <div class="player-color" id="player2Color"></div>
+                <div class="slider-container">
+                    <label class="slider-label">Tono (Hue)</label>
+                    <input type="range" min="0" max="360" value="0" class="slider" id="hue2">
+                    <div class="key-controls">←/→ - Ajustar</div>
+                    
+                    <label class="slider-label">Saturación</label>
+                    <input type="range" min="0" max="100" value="50" class="slider" id="saturation2">
+                    <div class="key-controls">↑/↓ - Ajustar</div>
+                    
+                    <label class="slider-label">Luminosidad</label>
+                    <input type="range" min="0" max="100" value="50" class="slider" id="lightness2">
+                    <div class="key-controls">K/L - Ajustar</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="startButton">Comenzar</button>
+            <button id="checkButton" disabled>Comprobar</button>
+            <button id="nextRound" disabled>Siguiente</button>
+            <button id="resetButton">Reiniciar</button>
+            <button class="back-button" onclick="window.location.href='../../index.html'">Menú</button>
+        </div>
+    </div>
+
+    <script>
+        let currentRound = 1;
+        let timer = 30;
+        let timerInterval;
+        let scores = {player1: 0, player2: 0};
+        let targetHSL = {};
+        let gameStarted = false;
+
+        const KEYBOARD_CONTROLS = {
+            // Jugador 1
+            'KeyA': { player: 1, slider: 'hue', change: -1 },
+            'KeyD': { player: 1, slider: 'hue', change: 1 },
+            'KeyW': { player: 1, slider: 'saturation', change: 1 },
+            'KeyS': { player: 1, slider: 'saturation', change: -1 },
+            'KeyQ': { player: 1, slider: 'lightness', change: -1 },
+            'KeyE': { player: 1, slider: 'lightness', change: 1 },
+            
+            // Jugador 2
+            'ArrowLeft': { player: 2, slider: 'hue', change: -1 },
+            'ArrowRight': { player: 2, slider: 'hue', change: 1 },
+            'ArrowUp': { player: 2, slider: 'saturation', change: 1 },
+            'ArrowDown': { player: 2, slider: 'saturation', change: -1 },
+            'KeyK': { player: 2, slider: 'lightness', change: -1 },
+            'KeyL': { player: 2, slider: 'lightness', change: 1 }
+        };
+
+        function updatePlayerColor(player) {
+            const hue = document.getElementById(`hue${player}`).value;
+            const saturation = document.getElementById(`saturation${player}`).value;
+            const lightness = document.getElementById(`lightness${player}`).value;
+            const color = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+            document.getElementById(`player${player}Color`).style.backgroundColor = color;
+            return {hue, saturation, lightness};
+        }
+
+        function generateRandomColor() {
+            targetHSL = {
+                hue: Math.floor(Math.random() * 360),
+                saturation: Math.floor(Math.random() * 101),
+                lightness: Math.floor(Math.random() * 101)
+            };
+            const color = `hsl(${targetHSL.hue}, ${targetHSL.saturation}%, ${targetHSL.lightness}%)`;
+            document.getElementById('targetColor').style.backgroundColor = color;
+        }
+
+        function calculateColorDistance(color1, color2) {
+            const dH = Math.min(Math.abs(color1.hue - color2.hue), 360 - Math.abs(color1.hue - color2.hue));
+            const dS = Math.abs(color1.saturation - color2.saturation);
+            const dL = Math.abs(color1.lightness - color2.lightness);
+            return dH + dS + dL;
+        }
+
+        function checkColors() {
+            const color1 = updatePlayerColor(1);
+            const color2 = updatePlayerColor(2);
+            
+            const distance1 = calculateColorDistance(targetHSL, {
+                hue: parseInt(color1.hue),
+                saturation: parseInt(color1.saturation),
+                lightness: parseInt(color1.lightness)
+            });
+            
+            const distance2 = calculateColorDistance(targetHSL, {
+                hue: parseInt(color2.hue),
+                saturation: parseInt(color2.saturation),
+                lightness: parseInt(color2.lightness)
+            });
+
+            if (distance1 < distance2) {
+                scores.player1++;
+            } else if (distance2 < distance1) {
+                scores.player2++;
+            }
+
+            document.getElementById('score1').textContent = scores.player1;
+            document.getElementById('score2').textContent = scores.player2;
+            
+            clearInterval(timerInterval);
+            document.getElementById('checkButton').disabled = true;
+            document.getElementById('startButton').style.display = 'none';
+
+            // Verificar si hay un ganador
+            if (scores.player1 >= 3 || scores.player2 >= 3) {
+                const winner = scores.player1 >= 3 ? "¡Jugador 1" : "¡Jugador 2";
+                alert(`${winner} ha ganado la partida!`);
+                document.getElementById('nextRound').disabled = true;
+                document.getElementById('startButton').style.display = 'none';
+            } else {
+                document.getElementById('nextRound').disabled = false;
+            }
+        }
+
+        function startRound() {
+            generateRandomColor();
+            timer = 30;
+            updateTimerDisplay();
+            document.getElementById('round-info').textContent = `Ronda: ${currentRound}`;
+            document.getElementById('checkButton').disabled = false;
+            document.getElementById('nextRound').disabled = true;
+            document.getElementById('startButton').style.display = 'none';
+
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                timer--;
+                updateTimerDisplay();
+                if (timer <= 0) {
+                    checkColors();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const timerDisplay = document.getElementById('timerDisplay');
+            timerDisplay.textContent = timer;
+            document.getElementById('time-info').textContent = `Tiempo: ${timer}s`;
+        }
+
+        function resetGame() {
+            currentRound = 1;
+            scores.player1 = 0;
+            scores.player2 = 0;
+            document.getElementById('score1').textContent = '0';
+            document.getElementById('score2').textContent = '0';
+            gameStarted = false;
+            clearInterval(timerInterval);
+            document.getElementById('timerDisplay').textContent = '--';
+            document.getElementById('startButton').style.display = 'block';
+            document.getElementById('checkButton').disabled = true;
+            document.getElementById('nextRound').disabled = true;
+            generateRandomColor();
+
+            // También podríamos resetear los sliders a sus valores iniciales
+            ['hue1', 'hue2'].forEach(id => document.getElementById(id).value = 0);
+            ['saturation1', 'saturation2', 'lightness1', 'lightness2'].forEach(id => 
+                document.getElementById(id).value = 50
+            );
+            updatePlayerColor(1);
+            updatePlayerColor(2);
+        }
+
+        function startGame() {
+            if (!gameStarted) {
+                gameStarted = true;
+                startRound();
+            }
+        }
+
+        // Event Listeners
+        document.querySelectorAll('.slider').forEach(slider => {
+            slider.addEventListener('input', () => {
+                const player = slider.id.endsWith('1') ? 1 : 2;
+                updatePlayerColor(player);
+            });
+        });
+
+        document.getElementById('startButton').addEventListener('click', startGame);
+        document.getElementById('checkButton').addEventListener('click', checkColors);
+        document.getElementById('nextRound').addEventListener('click', () => {
+            currentRound++;
+            startRound();
+        });
+        document.getElementById('resetButton').addEventListener('click', resetGame);
+
+        document.addEventListener('keydown', (event) => {
+            const control = KEYBOARD_CONTROLS[event.code];
+            if (control && gameStarted) {
+                event.preventDefault();
+                const { player, slider, change } = control;
+                const sliderId = `${slider}${player}`;
+                const sliderElement = document.getElementById(sliderId);
+                
+                let newValue = parseInt(sliderElement.value) + (change * (slider === 'hue' ? 5 : 2));
+                const min = parseInt(sliderElement.min);
+                const max = parseInt(sliderElement.max);
+                newValue = Math.min(Math.max(newValue, min), max);
+                
+                sliderElement.value = newValue;
+                updatePlayerColor(player);
+            }
+        });
+
+        // Inicializar el juego en estado de espera
+        resetGame();
+    </script>
+</body>
+</html>

@@ -366,6 +366,27 @@ button:disabled {
     animation: roll 0.6s ease;
 }
 
+.tutorial-button {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.tutorial-button button {
+    font-size: 1.1em;
+    padding: 10px 20px;
+    background: #27ae60; /* Verde llamativo */
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.tutorial-button button:hover {
+    background: #1e8449;
+    transform: scale(1.05);
+}
+
 .modal {
     display: none;
     position: fixed;
@@ -516,6 +537,27 @@ body.modal-active .modal {
         border-radius: 10px;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
     }
+
+    .tutorial-button {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.tutorial-button button {
+    font-size: 1.1em;
+    padding: 10px 20px;
+    background: #27ae60; /* Verde llamativo */
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.tutorial-button button:hover {
+    background: #1e8449;
+    transform: scale(1.05);
+}
 
     .secondary-controls button {
         background: #e74c3c;

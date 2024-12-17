@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reglas de Spiralia</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="tutorial-container">
+        <h1>Bienvenido a las reglas de <span style="color: #4a90e2;">Spiralia</span></h1>
+        <p>¡Explora las reglas y estrategias para ganar en este emocionante juego de tablero!</p>
+
+        <h2>Objetivo del Juego</h2>
+        <p>El objetivo es avanzar por el tablero en espiral y llegar a la casilla central (casilla 62) con al menos 1 cristal. Deberás gestionar tus recursos estratégicamente mientras enfrentas casillas especiales y eventos únicos.</p>
+
+        <h2>Turno de un Jugador</h2>
+        <ol>
+            <li><strong>Decidir acción inicial:</strong>
+                <ul>
+                    <li><strong>Meditar:</strong> Recupera 3 cristales (máximo 15).</li>
+                    <li><strong>Lanzar Dados:</strong> Puedes lanzar 1 o 2 dados.</li>
+                </ul>
+            </li>
+            <li><strong>Lanzamiento de dados:</strong>
+                <ul>
+                    <li><strong>1 dado:</strong> Gratis y recuperas 1 cristal al lanzarlo.</li>
+                    <li><strong>2 dados:</strong> Cuesta 2 cristales, pero aumenta tu velocidad.</li>
+                </ul>
+            </li>
+            <li><strong>Modificar Resultado:</strong> Puedes modificar tu tirada en ±1 por un costo de 2 cristales.</li>
+            <li><strong>Mover Ficha:</strong> Avanza el número de casillas igual a la suma de los dados.</li>
+            <li><strong>Enfrentar eventos:</strong> Dependiendo de la casilla donde caigas, se activarán efectos especiales.</li>
+        </ol>
+
+        <h2>Casillas Especiales</h2>
+        <ul>
+            <li><strong>Portal Espiral:</strong> Paga 2 cristales para transportarte al siguiente portal.</li>
+            <li><strong>Puente Dimensional:</strong> Paga 3 cristales para moverte al otro puente.</li>
+            <li><strong>Santuario:</strong> Recupera 5 cristales, pero pierdes el siguiente turno.</li>
+            <li><strong>Vórtice Temporal:</strong> Paga 4 cristales o quedarás atrapado hasta que otro jugador pase por aquí.</li>
+            <li><strong>Laberinto Astral:</strong> Paga 3 cristales o retrocede a la casilla 30.</li>
+            <li><strong>Vacío Primordial:</strong> Paga 5 cristales o regresa a la casilla 1.</li>
+        </ul>
+
+        <h2>Reglas Especiales</h2>
+        <ul>
+            <li>Solo puedes tener hasta 15 cristales.</li>
+            <li>Si superas la casilla 62, retrocedes el excedente (por ejemplo, tirada de 65 desde la casilla 60 → terminas en la casilla 58).</li>
+            <li>Si decides lanzar solo 1 dado, obtendrás 1 cristal adicional (si no estás en el límite).</li>
+        </ul>
+
+        <h2>Estrategias Clave</h2>
+        <p>¡Planifica tus recursos y anticipa las decisiones de tus oponentes! Los cristales son limitados, así que úsalos sabiamente para sobrevivir a los desafíos del tablero.</p>
+
+        <button class="back-button" onclick="window.location.href='index.html'">Volver al Juego</button>
+    </div>
+</body>
+</html>
