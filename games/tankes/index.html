@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ditty Tank Elite League</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .game-header {
+            width: 100%;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .game-title {
+            color: #4a90e2;
+            font-size: 2em;
+            margin: 0 0 10px 0;
+            text-align: center;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            color: #666;
+            font-size: 1.2em;
+        }
+
+        .lives {
+            font-family: Arial, sans-serif;
+            font-size: 1.2em;
+            color: #666;
+        }
+
+        canvas {
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background: white;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            background: #4a90e2;
+            color: white;
+            cursor: pointer;
+            font-size: 1em;
+        }
+
+        button:hover {
+            background: #357abd;
+        }
+
+        .back-button {
+            background: #666;
+        }
+
+        .back-button:hover {
+            background: #555;
+        }
+
+        #gamepadInfo {
+            color: #4a90e2;
+            margin-top: 10px;
+            font-size: 1em;
+        }
+
+        @media (max-width: 768px) {
+            .game-container {
+                padding: 10px;
+            }
+
+            canvas {
+                width: 100%;
+                height: auto;
+            }
+        }
+    </style>
+    <title>Tank Battle</title>
+    <style>
+        canvas {
+            border: 2px solid black;
+        }
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+        }
+        .lives {
+            font-family: Arial, sans-serif;
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        .controls-info {
+            font-family: Arial, sans-serif;
+            margin-top: 10px;
+            text-align: center;
+        }
+        #gamepadInfo {
+            color: green;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    
+    <div class="game-container">
+        <div class="game-header">
+            <h1 class="game-title">Ditty Tank Elite League</h1>
+            <div class="game-info">
+                <span id="player1Lives">Jugador 1: ❤️❤️❤️</span>
+                <span id="player2Lives">Jugador 2: ❤️❤️❤️</span>
+            </div>
+            <div id="gamepadInfo">Esperando mandos...</div>
+        </div>
+        
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <div class="controls">
+            <button onclick="resetGame()">Reiniciar Juego</button>
+            <button class="back-button" onclick="window.location.href='../../index.html'">
+                Volver al Menú
+            </button>
+        </div>
+    </div>
+
+
+    <script>
+    // Configuración básica
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const gamepadInfo = document.getElementById('gamepadInfo');
+
+    // Constantes del juego
+    const TANK_SIZE = 40;
+    const BULLET_SIZE = 5;
+    let TANK_SPEED = 6;
+    let BULLET_SPEED = 8;
+    const ROTATION_SPEED = 0.05;
+    const GAMEPAD_DEADZONE = 0.2;
+
+    // Añadir estas variables para el control del gamepad en menús
+    let lastGamepadButtonPress = false;
+    let gamepadMenuDelay = 0;
+    const GAMEPAD_MENU_DELAY = 15; // Ajustar según necesidad
+
+    function applyConfig() {
+        // Aplicar los cambios desde las opciones
+        TANK_SPEED = configOptions[2].value;
+        BULLET_SPEED = configOptions[1].value;
+        
+        // Ajustar vidas de los tanques
+        tank1.lives = configOptions[0].value;
+        tank2.lives = configOptions[0].value;
+        
+        // Actualizar display
+        updateLivesDisplay();
+    }
+
+    function handleGamepadMenu() {
+        const gamepads = navigator.getGamepads();
+        const gamepad = gamepads[0];
+        
+        if (!gamepad) return;
+        
+        if (gamepadMenuDelay > 0) {
+            gamepadMenuDelay--;
+            return;
+        }
+
+        switch(currentGameState) {
+            case GameState.MENU:
+                // Navegación vertical en el menú principal
+                if (gamepad.axes[1] > 0.5) { // Abajo
+                    selectedMenuItem = (selectedMenuItem + 1) % menuItems.length;
+                    gamepadMenuDelay = GAMEPAD_MENU_DELAY;
+                } else if (gamepad.axes[1] < -0.5) { // Arriba
+                    selectedMenuItem = (selectedMenuItem - 1 + menuItems.length) % menuItems.length;
+                    gamepadMenuDelay = GAMEPAD_MENU_DELAY;
+                }
+
+                // Selección con botón A
+                if (gamepad.buttons[0].pressed && !lastGamepadButtonPress) {
+                    handleMenuSelection();
+                }
+                break;
+                
+            case GameState.OPTIONS:
+                // Navegación vertical entre opciones
+                if (gamepad.axes[1] > 0.5) {
+                    gameConfig.selectedOption = (gameConfig.selectedOption + 1) % configOptions.length;
+                    gamepadMenuDelay = GAMEPAD_MENU_DELAY;
+                } else if (gamepad.axes[1] < -0.5) {
+                    gameConfig.selectedOption = (gameConfig.selectedOption - 1 + configOptions.length) % configOptions.length;
+                    gamepadMenuDelay = GAMEPAD_MENU_DELAY;
+                }
+
+                // Ajustar valores con stick horizontal
+                if (gamepad.axes[0] > 0.5) {
+                    const option = configOptions[gameConfig.selectedOption];
+                    if (option.value < option.max) {
+                        option.value++;
+                        gamepadMenuDelay = GAMEPAD_MENU_DELAY;
+                    }
+                } else if (gamepad.axes[0] < -0.5) {
+                    const option = configOptions[gameConfig.selectedOption];
+                    if (option.value > option.min) {
+                        option.value--;
+                        gamepadMenuDelay = GAMEPAD_MENU_DELAY;
+                    }
+                }
+
+                // Volver al menú principal con B
+                if (gamepad.buttons[1].pressed && !lastGamepadButtonPress) {
+                    currentGameState = GameState.MENU;
+                }
+
+                // Guardar configuración y volver con A
+                if (gamepad.buttons[0].pressed && !lastGamepadButtonPress) {
+                    applyConfig();
+                    currentGameState = GameState.MENU;
+                }
+                break;
+
+            case GameState.GAME_OVER:
+                // Reiniciar juego con A
+                if (gamepad.buttons[0].pressed && !lastGamepadButtonPress) {
+                    resetGame();
+                    currentGameState = GameState.PLAYING;
+                } 
+                // Volver al menú principal con B
+                else if (gamepad.buttons[1].pressed && !lastGamepadButtonPress) {
+                    currentGameState = GameState.MENU;
+                }
+                break;
+
+            case GameState.PLAYING:
+                // Si estás en el juego y presionas Start (botón 9), pausa el juego
+                if (gamepad.buttons[9].pressed && !lastGamepadButtonPress) {
+                    currentGameState = GameState.MENU;
+                }
+                break;
+        }
+
+        lastGamepadButtonPress = gamepad.buttons[0].pressed || 
+                                gamepad.buttons[1].pressed || 
+                                gamepad.buttons[9].pressed;
+    }
+
+    const gameConfig = {
+    lives: 3,
+    bulletSpeed: 8,
+    tankSpeed: 6,
+    selectedOption: 0
+    };
+
+    const configOptions = [
+    { name: 'Vidas', min: 1, max: 10, value: gameConfig.lives },
+    { name: 'Velocidad Balas', min: 1, max: 10, value: gameConfig.bulletSpeed },
+    { name: 'Velocidad Tanques', min: 2, max: 8, value: gameConfig.tankSpeed }
+    ];
+
+
+
+
+    
+    // Control del juego
+    const keys = {};
+    let gameRunning = true;
+
+    // Cargar imágenes
+    const backgroundImage = new Image();
+    backgroundImage.src = 'campos.png'; // Asegúrate de que esta ruta es correcta
+    let backgroundLoaded = false;
+
+    backgroundImage.onload = function() {
+        backgroundLoaded = true;
+    };
+
+    const tank1Image = new Image();
+    const tank2Image = new Image();
+    let tank1ImageLoaded = false;
+    let tank2ImageLoaded = false;
+    tank1Image.src = 'tanke1.png'; // Asegúrate de que esta ruta es correcta
+    tank2Image.src = 'tanke2.png'; // Asegúrate de que esta ruta es correcta
+
+    tank1Image.onload = () => {
+        tank1ImageLoaded = true;
+    };
+    tank2Image.onload = () => {
+        tank2ImageLoaded = true;
+    };
+
+    const obstacleImage = new Image();
+    obstacleImage.src = 'ruta_obstaculo1.png'; 
+    let obstacleImageLoaded = false;
+
+    obstacleImage.onload = function() {
+        obstacleImageLoaded = true;
+    };
+
+    const obstacles = [
+        { 
+            x: 200, 
+            y: 200, 
+            width: 50, 
+            height: 200,
+            rotation: 0,  // Añadir rotación si lo deseas
+            image: 'ruta_obstaculo1.png'  // Imagen específica para este obstáculo
+        },
+        { 
+            x: 550, 
+            y: 200, 
+            width: 50, 
+            height: 200,
+            rotation: 0,  // 45 grados
+            image: 'ruta_obstaculo2.png'
+        }
+    ];
+        
+    </script>
+    <script>
+
+        const GameState = {
+            MENU: 'menu',
+            OPTIONS: 'options',
+            PLAYING: 'playing',
+            GAME_OVER: 'gameOver'
+        };
+
+        let currentGameState = GameState.MENU;
+        let selectedMenuItem = 0;
+        const menuItems = ['Iniciar Partida', 'Opciones', 'Salir'];
+
+        function drawOptionsMenu() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Título
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 48px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Opciones', canvas.width/2, 100);
+
+            // Dibujar opciones
+            ctx.font = '24px Arial';
+            configOptions.forEach((option, index) => {
+                const y = 200 + index * 70;
+                const isSelected = index === gameConfig.selectedOption;
+                
+                // Nombre de la opción
+                ctx.fillStyle = isSelected ? '#FFD700' : '#FFFFFF';
+                ctx.textAlign = 'right';
+                ctx.fillText(`${option.name}: `, canvas.width/2 - 50, y);
+
+                // Barra de valor
+                const barWidth = 200;
+                const barHeight = 20;
+                const barX = canvas.width/2 + 50;
+                const barY = y - 15;
+
+                // Dibujar barra base
+                ctx.fillStyle = '#444444';
+                ctx.fillRect(barX, barY, barWidth, barHeight);
+
+                // Dibujar valor actual
+                const fillWidth = ((option.value - option.min) / (option.max - option.min)) * barWidth;
+                ctx.fillStyle = isSelected ? '#FFD700' : '#4169E1';
+                ctx.fillRect(barX, barY, fillWidth, barHeight);
+
+                // Mostrar valor numérico
+                ctx.textAlign = 'left';
+                ctx.fillText(option.value, barX + barWidth + 20, y);
+            });
+
+            // Instrucciones
+            ctx.font = '18px Arial';
+            ctx.fillStyle = '#AAAAAA';
+            ctx.textAlign = 'center';
+            ctx.fillText('↑↓ Seleccionar opción | ←→ Ajustar valor', canvas.width/2, 500);
+            ctx.fillText('B o ESC para volver | A para guardar', canvas.width/2, 530);
+        }
+
+
+        
+
+        // Crear función para dibujar el menú principal
+        function drawMainMenu() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Título
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 48px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Tank Elite League', canvas.width/2, 150);
+
+            // Opciones del menú
+            ctx.font = '24px Arial';
+            menuItems.forEach((item, index) => {
+                if (index === selectedMenuItem) {
+                    ctx.fillStyle = '#FFD700';
+                    ctx.fillText('> ' + item + ' <', canvas.width/2, 300 + index * 50);
+                } else {
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.fillText(item, canvas.width/2, 300 + index * 50);
+                }
+            });
+
+            // Instrucciones actualizadas para incluir gamepad
+            ctx.font = '18px Arial';
+            ctx.fillStyle = '#AAAAAA';
+            ctx.fillText('Usa ↑↓ o Stick Analógico para seleccionar', canvas.width/2, 480);
+            ctx.fillText('Presiona ENTER o botón A para confirmar', canvas.width/2, 510);
+        }
+
+
+        // Función para la pantalla de Game Over
+        function drawGameOver(winner) {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 48px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Game Over', canvas.width/2, 200);
+            
+            ctx.font = '32px Arial';
+            ctx.fillStyle = '#FFD700';
+            ctx.fillText(`¡${winner} Gana!`, canvas.width/2, 280);
+
+            ctx.font = '24px Arial';
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillText('Presiona ENTER o botón A para volver a jugar', canvas.width/2, 350);
+            ctx.fillText('Presiona ESC o botón B para volver al menú', canvas.width/2, 390);
+        }
+
+        // Clase Tank
+        class Tank {
+            constructor(x, y, color, rotation, image) {  // Añadido parámetro image
+            this.x = x;
+            this.y = y;
+            this.color = color;
+            this.rotation = rotation;
+            this.lives = configOptions[0].value;
+            this.bullets = [];
+            this.canShoot = true;
+            this.isHit = false;
+            this.hitTimer = 0;
+            this.hitAlpha = 1;
+            this.explosions = [];
+            this.image = image;  // Añadida propiedad image
+            this.dustParticles = []; // Array para las partículas de polvo
+            this.lastX = x; // Para detectar movimiento
+            this.lastY = y;
+            this.isMoving = false;
+            this.isInvulnerable = false;  // Nueva propiedad para la invulnerabilidad
+            this.invulnerableTime = 1000; // Duración de la invulnerabilidad en milisegundos (1 segundo)   
+            this.energy = 0;
+            this.maxEnergy = 100;  // Máxima energía
+            this.specialAttackReady = false;
+            this.burstBullets = 16; // Número de balas en la ráfaga (16 = una cada 22.5 grados)
+        }
+
+        specialAttack() {
+            if (this.energy >= this.maxEnergy) {
+                // Disparar en todas las direcciones
+                for (let i = 0; i < this.burstBullets; i++) {
+                    const angle = (Math.PI * 2 / this.burstBullets) * i;
+                    this.bullets.push({
+                        x: this.x + Math.cos(angle) * (TANK_SIZE + 10),
+                        y: this.y + Math.sin(angle) * (TANK_SIZE + 10),
+                        rotation: angle
+                    });
+                }
+                // Resetear la energía
+                this.energy = 0;
+                this.specialAttackReady = false;
+            }
+        }
+
+            makeInvulnerable() {
+                this.isInvulnerable = true;
+                setTimeout(() => {
+                    this.isInvulnerable = false;
+                }, this.invulnerableTime);
+            }
+
+            createExplosion() {
+                const particleCount = 20;
+                for (let i = 0; i < particleCount; i++) {
+                    const angle = (Math.PI * 2 / particleCount) * i;
+                    const speed = Math.random() * 2 + 2;
+                    this.explosions.push({
+                        x: this.x,
+                        y: this.y,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed,
+                        life: 1, // Vida de la partícula (1 = 100%)
+                        color: this.color
+                    });
+                }
+            }
+
+            createDustParticle() {
+                // Solo crear polvo si el tanque se está moviendo
+                const dx = this.x - this.lastX;
+                const dy = this.y - this.lastY;
+                this.isMoving = Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1;
+
+                if (this.isMoving) {
+                    // Crear partículas detrás del tanque
+                    const angle = Math.atan2(dy, dx) + Math.PI; // Dirección opuesta al movimiento
+                    const spread = 2; // Qué tan disperso es el polvo
+
+                    this.dustParticles.push({
+                        x: this.x + Math.cos(angle) * (TANK_SIZE/2),
+                        y: this.y + Math.sin(angle) * (TANK_SIZE/2),
+                        vx: Math.cos(angle + (Math.random() - 0.5) * spread) * 0.5,
+                        vy: Math.sin(angle + (Math.random() - 0.5) * spread) * 0.5,
+                        life: 0.9,
+                        size: Math.random() * 3 + 2
+                    });
+                }
+
+                this.lastX = this.x;
+                this.lastY = this.y;
+            }
+
+            updateDustParticles() {
+                for (let i = this.dustParticles.length - 1; i >= 0; i--) {
+                    const particle = this.dustParticles[i];
+                    
+                    // Actualizar posición
+                    particle.x += particle.vx;
+                    particle.y += particle.vy;
+                    
+                    // Reducir vida
+                    particle.life -= 0.02;
+                    
+                    // Dibujar partícula
+                    ctx.beginPath();
+                    ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(139, 69, 19, ${particle.life * 0.5})`; // Color marrón con transparencia
+                    ctx.fill();
+                    
+                    // Eliminar partículas muertas
+                    if (particle.life <= 0) {
+                        this.dustParticles.splice(i, 1);
+                    }
+                }
+            }
+        
+            draw() {
+                this.createDustParticle();
+                this.updateDustParticles();
+                this.drawEnergyBar(); // Añadir al final del método draw
+            ctx.save();
+            
+            // Efecto de parpadeo cuando es golpeado o invulnerable
+            if (this.isHit || this.isInvulnerable) {
+                this.hitTimer++;
+                this.hitAlpha = Math.abs(Math.sin(this.hitTimer * 0.5));
+                ctx.globalAlpha = this.hitAlpha;
+                
+                if (this.hitTimer >= 20) { // Duración del efecto visual
+                    this.isHit = false;
+                    this.hitTimer = 0;
+                    ctx.globalAlpha = 1;
+                }
+            }
+
+            ctx.translate(this.x, this.y);
+            ctx.rotate(this.rotation);
+            
+            // Reemplazar el dibujo del tanque con la imagen
+            if (this.image) {
+                ctx.drawImage(
+                    this.image,
+                    -TANK_SIZE/2,
+                    -TANK_SIZE/2,
+                    TANK_SIZE,
+                    TANK_SIZE
+                );
+            }
+            
+            ctx.restore();
+
+            this.updateExplosions();
+        }
+
+            // Nuevo método para actualizar las explosiones
+            updateExplosions() {
+                for (let i = this.explosions.length - 1; i >= 0; i--) {
+                    const explosion = this.explosions[i];
+                    
+                    // Actualizar posición
+                    explosion.x += explosion.vx;
+                    explosion.y += explosion.vy;
+                    
+                    // Reducir vida
+                    explosion.life -= 0.05;
+                    
+                    // Dibujar partícula
+                    ctx.beginPath();
+                    ctx.arc(explosion.x, explosion.y, 3, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(${this.color === 'blue' ? '0,0,255' : '255,0,0'}, ${explosion.life})`;
+                    ctx.fill();
+                    
+                    // Eliminar partículas muertas
+                    if (explosion.life <= 0) {
+                        this.explosions.splice(i, 1);
+                    }
+                }
+            }
+        
+            shoot() {
+                if (this.canShoot) {
+
+                    const offsetDistance = TANK_SIZE/2; // Antes era TANK_SIZE + 10
+
+                    // Disparo normal
+                    this.bullets.push({
+                        x: this.x + Math.cos(this.rotation) * offsetDistance,
+                        y: this.y + Math.sin(this.rotation) * offsetDistance,
+                        rotation: this.rotation
+                    });
+                    this.canShoot = false;
+                    
+                    // Incrementar energía
+                    this.energy = Math.min(this.energy + 1, this.maxEnergy);
+                    if (this.energy >= this.maxEnergy) {
+                        this.specialAttackReady = true;
+                    }
+                    
+                    setTimeout(() => this.canShoot = true, 100);
+                }
+            }
+
+            drawEnergyBar() {
+                const barWidth = 50;
+                const barHeight = 5;
+                const fillWidth = (this.energy / this.maxEnergy) * barWidth;
+                
+                ctx.save();
+                // Barra base
+                ctx.fillStyle = '#333333';
+                ctx.fillRect(this.x - barWidth/2, this.y - TANK_SIZE - 15, barWidth, barHeight);
+                
+                // Barra de progreso
+                const energyColor = this.specialAttackReady ? '#FFD700' : '#4169E1';
+                ctx.fillStyle = energyColor;
+                ctx.fillRect(this.x - barWidth/2, this.y - TANK_SIZE - 15, fillWidth, barHeight);
+                ctx.restore();
+            }
+
+        
+            updateBullets() {
+                for (let i = this.bullets.length - 1; i >= 0; i--) {
+                    const bullet = this.bullets[i];
+                    bullet.x += Math.cos(bullet.rotation) * BULLET_SPEED;
+                    bullet.y += Math.sin(bullet.rotation) * BULLET_SPEED;
+        
+                    // Eliminar balas fuera de pantalla
+                    if (bullet.x < 0 || bullet.x > canvas.width || 
+                        bullet.y < 0 || bullet.y > canvas.height) {
+                        this.bullets.splice(i, 1);
+                        continue;
+                    }
+        
+                    // Colisión con obstáculos
+                    for (const obstacle of obstacles) {
+                        if (bullet.x > obstacle.x && bullet.x < obstacle.x + obstacle.width &&
+                            bullet.y > obstacle.y && bullet.y < obstacle.y + obstacle.height) {
+                            this.bullets.splice(i, 1);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Control de mandos
+        let gamepads = {
+            0: null,
+            1: null
+        };
+        
+        // Event listeners para mandos
+        window.addEventListener("gamepadconnected", (e) => {
+            gamepads[e.gamepad.index] = e.gamepad;
+            updateGamepadDisplay();
+        });
+        
+        window.addEventListener("gamepaddisconnected", (e) => {
+            gamepads[e.gamepad.index] = null;
+            updateGamepadDisplay();
+        });
+        
+        function updateGamepadDisplay() {
+            let connectedPads = Object.values(gamepads).filter(pad => pad !== null).length;
+            if (connectedPads === 0) {
+                gamepadInfo.textContent = "Esperando mandos...";
+                gamepadInfo.style.color = "red";
+            } else {
+                gamepadInfo.textContent = `Mandos conectados: ${connectedPads}`;
+                gamepadInfo.style.color = "green";
+            }
+        }
+        
+        // Event listeners para teclado
+        window.addEventListener('keydown', e => keys[e.key] = true);
+        window.addEventListener('keyup', e => keys[e.key] = false);
+        
+        // Crear tanques
+        const tank1 = new Tank(100, 300, 'blue', 0, tank1Image);
+        const tank2 = new Tank(700, 300, 'red', Math.PI, tank2Image);
+        </script>
+        <!-- Añadir esto después del script anterior -->
+<script>
+
+    // Añadir esta función para detectar colisión entre tanques
+    function checkTankCollision(tank1X, tank1Y, tank2X, tank2Y) {
+        const dx = tank1X - tank2X;
+        const dy = tank1Y - tank2Y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        // Si la distancia es menor que el tamaño combinado de los tanques, hay colisión
+        return distance < TANK_SIZE;
+    }
+
+
+
+    // Funciones de colisión y movimiento
+    function checkTankObstacleCollision(tankX, tankY) {
+        for (const obstacle of obstacles) {
+            // Calculamos los bordes del tanque
+            const tankLeft = tankX - TANK_SIZE/2;
+            const tankRight = tankX + TANK_SIZE/2;
+            const tankTop = tankY - TANK_SIZE/2;
+            const tankBottom = tankY + TANK_SIZE/2;
+            
+            // Calculamos los bordes del obstáculo
+            const obstacleLeft = obstacle.x;
+            const obstacleRight = obstacle.x + obstacle.width;
+            const obstacleTop = obstacle.y;
+            const obstacleBottom = obstacle.y + obstacle.height;
+            
+            // Verificamos si hay colisión
+            if (tankRight > obstacleLeft && 
+                tankLeft < obstacleRight && 
+                tankBottom > obstacleTop && 
+                tankTop < obstacleBottom) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    function moveTankSafely(tank, newX, newY, otherTank) {
+        const originalX = tank.x;
+        const originalY = tank.y;
+        
+        // Intentamos mover en X
+        tank.x = newX;
+        if (checkTankObstacleCollision(tank.x, tank.y) || 
+            checkTankCollision(tank.x, tank.y, otherTank.x, otherTank.y)) {
+            tank.x = originalX;
+        }
+        
+        // Intentar mover en Y
+        tank.y = newY;
+        if (checkTankObstacleCollision(tank.x, tank.y) || 
+            checkTankCollision(tank.x, tank.y, otherTank.x, otherTank.y)) {
+            tank.y = originalY;
+        }
+    }
+    
+    function processGamepadInput(gamepad, tank, otherTank) {
+        if (!gamepad) return;
+        
+        // Movimiento con stick izquierdo
+        const moveX = gamepad.axes[0];
+        const moveY = gamepad.axes[1];
+        
+        // Apuntado con stick derecho
+        const aimX = gamepad.axes[2];
+        const aimY = gamepad.axes[3];
+        
+        // Movimiento
+        if (Math.abs(moveX) > GAMEPAD_DEADZONE || Math.abs(moveY) > GAMEPAD_DEADZONE) {
+            let newX = tank.x + moveX * TANK_SPEED;
+            let newY = tank.y + moveY * TANK_SPEED;
+            moveTankSafely(tank, newX, newY, otherTank);
+        }
+        
+        // Rotación basada en stick derecho
+        if (Math.abs(aimX) > GAMEPAD_DEADZONE || Math.abs(aimY) > GAMEPAD_DEADZONE) {
+            tank.rotation = Math.atan2(aimY, aimX);
+        }
+        
+        // Disparo normal con RT
+        if (gamepad.buttons[7].pressed) {
+            tank.shoot();
+        }
+
+        // Disparo especial con LT
+        if (gamepad.buttons[6].pressed && tank.specialAttackReady) {
+            tank.specialAttack();
+        }
+    }
+    
+    function updateGamepadInput() {
+        const pads = navigator.getGamepads();
+        processGamepadInput(pads[0], tank1, tank2);
+        processGamepadInput(pads[1], tank2, tank1);
+    }
+
+    function checkCollisions(tank1, tank2) {
+        // Colisión entre balas y tanques
+        for (let i = tank1.bullets.length - 1; i >= 0; i--) {
+            const bullet = tank1.bullets[i];
+            const dx = bullet.x - tank2.x;
+            const dy = bullet.y - tank2.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance < TANK_SIZE/2 && !tank2.isInvulnerable) {
+                tank2.lives--;
+                tank1.bullets.splice(i, 1);
+                // Activar efectos visuales e invulnerabilidad
+                tank2.isHit = true;
+                tank2.makeInvulnerable();
+                tank2.createExplosion();
+                updateLivesDisplay();
+                
+                if (tank2.lives <= 0) {
+                    currentGameState = GameState.GAME_OVER;
+                    winner = "Jugador 1";
+                }
+            }
+        }
+
+        // Lo mismo para el tank2
+        for (let i = tank2.bullets.length - 1; i >= 0; i--) {
+            const bullet = tank2.bullets[i];
+            const dx = bullet.x - tank1.x;
+            const dy = bullet.y - tank1.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance < TANK_SIZE/2 && !tank1.isInvulnerable) {
+                tank1.lives--;
+                tank2.bullets.splice(i, 1);
+                // Activar efectos visuales e invulnerabilidad
+                tank1.isHit = true;
+                tank1.makeInvulnerable();
+                tank1.createExplosion();
+                updateLivesDisplay();
+                
+                if (tank1.lives <= 0) {
+                    currentGameState = GameState.GAME_OVER;
+                    winner = "Jugador 2";
+                }
+            }
+        }
+    }
+    
+    function updateLivesDisplay() {
+        document.getElementById('player1Lives').textContent = 
+            `Jugador 1: ${'❤️'.repeat(tank1.lives)}`;
+        document.getElementById('player2Lives').textContent = 
+            `Jugador 2: ${'❤️'.repeat(tank2.lives)}`;
+    }
+    
+    function resetGame() {
+        // Usar el valor configurado de vidas en lugar de 3
+        tank1.lives = configOptions[0].value;
+        tank2.lives = configOptions[0].value;
+        
+        // Resetear posiciones
+        tank1.x = 100;
+        tank1.y = 300;
+        tank2.x = 700;
+        tank2.y = 300;
+        
+        // Resetear rotaciones
+        tank1.rotation = 0;
+        tank2.rotation = Math.PI;
+        
+        // Resetear balas
+        tank1.bullets = [];
+        tank2.bullets = [];
+        
+        // Resetear energía especial
+        tank1.energy = 0;
+        tank1.specialAttackReady = false;
+        tank2.energy = 0;
+        tank2.specialAttackReady = false;
+        
+        // Resetear estados de hit y vulnerabilidad
+        tank1.isHit = false;
+        tank1.hitTimer = 0;
+        tank1.isInvulnerable = false;
+        tank2.isHit = false;
+        tank2.hitTimer = 0;
+        tank2.isInvulnerable = false;
+        
+        // Resetear explosiones si existen
+        tank1.explosions = [];
+        tank2.explosions = [];;
+        
+        // Actualizar display de vidas
+        updateLivesDisplay();
+        
+        // Resetear estado del juego
+        gameRunning = true;
+        currentGameState = GameState.PLAYING;
+    }
+    </script>
+    <!-- Añadir esto después del script anterior -->
+<script>
+
+    
+    function gameLoop() {
+        handleGamepadMenu();
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        switch(currentGameState) {
+            case GameState.MENU:
+                drawMainMenu();
+                break;
+
+            case GameState.OPTIONS:
+                drawOptionsMenu();
+                break;
+                
+            case GameState.PLAYING:
+                // Dibujar fondo
+                if (backgroundLoaded) {
+                    ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+                } else {
+                    ctx.fillStyle = '#7CB342';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                }
+            
+                // Actualizar input de gamepad
+                updateGamepadInput();
+            
+                // Control de tanque 1
+                let newX1 = tank1.x;
+                let newY1 = tank1.y;
+
+                if (keys['w']) newY1 -= TANK_SPEED;
+                if (keys['s']) newY1 += TANK_SPEED;
+                if (keys['a']) newX1 -= TANK_SPEED;
+                if (keys['d']) newX1 += TANK_SPEED;
+
+                moveTankSafely(tank1, newX1, newY1, tank2);
+
+                // Control de tanque 2
+                let newX2 = tank2.x;
+                let newY2 = tank2.y;
+
+                if (keys['ArrowUp']) newY2 -= TANK_SPEED;
+                if (keys['ArrowDown']) newY2 += TANK_SPEED;
+                if (keys['ArrowLeft']) newX2 -= TANK_SPEED;
+                if (keys['ArrowRight']) newX2 += TANK_SPEED;
+
+                moveTankSafely(tank2, newX2, newY2, tank1);
+            
+                // Mantener tanques dentro del canvas
+                tank1.x = Math.max(TANK_SIZE/2, Math.min(canvas.width - TANK_SIZE/2, tank1.x));
+                tank1.y = Math.max(TANK_SIZE/2, Math.min(canvas.height - TANK_SIZE/2, tank1.y));
+                tank2.x = Math.max(TANK_SIZE/2, Math.min(canvas.width - TANK_SIZE/2, tank2.x));
+                tank2.y = Math.max(TANK_SIZE/2, Math.min(canvas.height - TANK_SIZE/2, tank2.y));
+                
+                // Dibujar obstáculos
+                for (const obstacle of obstacles) {
+                    if (obstacleImageLoaded) {
+                        ctx.save();
+                        ctx.translate(obstacle.x + obstacle.width/2, obstacle.y + obstacle.height/2);
+                        if (obstacle.rotation) {
+                            ctx.rotate(obstacle.rotation);
+                        }
+                        ctx.drawImage(
+                            obstacleImage,
+                            -obstacle.width/2,
+                            -obstacle.height/2,
+                            obstacle.width,
+                            obstacle.height
+                        );
+                        ctx.restore();
+                    } else {
+                        ctx.fillStyle = '#666';
+                        ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+                    }
+                }
+            
+                // Actualizar y dibujar balas
+                tank1.updateBullets();
+                tank2.updateBullets();
+            
+                // Dibujar balas
+                ctx.fillStyle = 'black';
+                for (const bullet of tank1.bullets) {
+                    ctx.beginPath();
+                    ctx.arc(bullet.x, bullet.y, BULLET_SIZE, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                for (const bullet of tank2.bullets) {
+                    ctx.beginPath();
+                    ctx.arc(bullet.x, bullet.y, BULLET_SIZE, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            
+                // Dibujar tanques y sus barras de energía
+                tank1.draw();
+                tank2.draw();
+            
+                // Comprobar colisiones
+                if (gameRunning) {
+                    checkCollisions(tank1, tank2);
+                }
+                break;
+                
+            case GameState.GAME_OVER:
+                drawGameOver(winner);
+                break;
+        }
+
+        requestAnimationFrame(gameLoop);
+    }
+    
+    // Iniciar el juego cuando todo esté listo
+    function startGame() {
+        updateLivesDisplay();
+        gameLoop();
+    }
+
+    // Manejar input del menú
+    window.addEventListener('keydown', (e) => {
+        if (currentGameState === GameState.MENU) {
+            switch(e.key) {
+                case 'ArrowUp':
+                    selectedMenuItem = (selectedMenuItem - 1 + menuItems.length) % menuItems.length;
+                    break;
+                case 'ArrowDown':
+                    selectedMenuItem = (selectedMenuItem + 1) % menuItems.length;
+                    break;
+                case 'Enter':
+                    handleMenuSelection();
+                    break;
+            }
+        } 
+        else if (currentGameState === GameState.OPTIONS) {
+            switch(e.key) {
+                case 'ArrowUp':
+                    gameConfig.selectedOption = (gameConfig.selectedOption - 1 + configOptions.length) % configOptions.length;
+                    break;
+                case 'ArrowDown':
+                    gameConfig.selectedOption = (gameConfig.selectedOption + 1) % configOptions.length;
+                    break;
+                case 'ArrowLeft':
+                    const option = configOptions[gameConfig.selectedOption];
+                    if (option.value > option.min) option.value--;
+                    break;
+                case 'ArrowRight':
+                    const opt = configOptions[gameConfig.selectedOption];
+                    if (opt.value < opt.max) opt.value++;
+                    break;
+                case 'Enter':
+                    applyConfig();
+                    currentGameState = GameState.MENU;
+                    break;
+                case 'Escape':
+                    currentGameState = GameState.MENU;
+                    break;
+            }
+        }
+        else if (currentGameState === GameState.GAME_OVER) {
+            if (e.key === 'Enter') {
+                resetGame();
+                currentGameState = GameState.PLAYING;
+            } else if (e.key === 'Escape') {
+                currentGameState = GameState.MENU;
+            }
+        }
+    });
+
+    // Manejar selección del menú
+    function handleMenuSelection() {
+        switch(selectedMenuItem) {
+            case 0: // Iniciar Partida
+                resetGame();
+                currentGameState = GameState.PLAYING;
+                break;
+            case 1: // Opciones
+                currentGameState = GameState.OPTIONS;
+                break;
+            case 2: // Salir
+                // Implementar lógica de salida
+                break;
+        }
+    }
+    
+    // Iniciar el juego
+    startGame();
+    </script>
+</body>
+</html>
